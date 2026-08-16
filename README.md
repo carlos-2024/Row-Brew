@@ -114,22 +114,25 @@ openssl rand -base64 48
 
 ### 4. Desplegar y sembrar
 
-Dale **Deploy**. Al arrancar, el contenedor ejecuta `prisma db push` solo
-(está en `docker-entrypoint.sh`), así que las tablas se crean sin que hagas nada.
+Para el **primer** despliegue agrega también esta variable:
 
-Falta cargar la carta. En la pestaña **Console** del servicio `roabrew`:
-
-```bash
-node -e "require('child_process').execSync('npx tsx prisma/seed.ts',{stdio:'inherit'})"
+```
+SEED_ON_START=true
 ```
 
-> Si `tsx` no está en la imagen de producción, la alternativa más simple es correr el
-> seed una vez desde tu máquina apuntando `DATABASE_URL` al Postgres de EasyPanel
-> (expón el puerto temporalmente o usa el túnel de EasyPanel):
->
-> ```bash
-> DATABASE_URL="postgres://..." npm run db:seed
-> ```
+Dale **Deploy**. Al arrancar, el contenedor crea las tablas con `prisma db push`
+y carga la carta completa, todo solo (está en `docker-entrypoint.sh`).
+
+Revisa los **Logs** del servicio: si dejaste `ADMIN_PASSWORD` sin definir, ahí
+aparece la contraseña generada del panel. Cópiala.
+
+Cuando confirmes que la carta cargó, **quita `SEED_ON_START`** (o ponla en
+`false`) y redespliega. El seed es idempotente y nunca pisa la contraseña de un
+admin existente, así que dejarlo puesto no rompe nada, pero alarga cada arranque.
+
+> El seed corre con el intérprete de TypeScript nativo de Node
+> (`node --experimental-strip-types`), así que no necesita `tsx` ni ninguna
+> dependencia de desarrollo dentro de la imagen.
 
 ### 5. Dominio
 
