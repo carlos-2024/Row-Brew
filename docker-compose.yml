@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: roabrew-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: roabrew
+      POSTGRES_PASSWORD: roabrew_dev_password
+      POSTGRES_DB: roabrew
+    ports:
+      - "5432:5432"
+    volumes:
+      - roabrew_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roabrew"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    container_name: roabrew-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://roabrew:roabrew_dev_password@db:5432/roabrew?schema=public
+      # Solo para desarrollo local. En producción usa valores propios.
+      AUTH_SECRET: cambia-esto-por-una-cadena-larga-y-aleatoria
+      ADMIN_EMAIL: admin@roabrew.com
+      # Vacío = el seed genera una contraseña aleatoria y la imprime
+      ADMIN_PASSWORD: ""
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - roabrew_uploads:/app/public/uploads
+
+volumes:
+  roabrew_pgdata:
+  roabrew_uploads:

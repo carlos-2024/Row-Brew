@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Catálogo ─────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  tagline     String? // "Té frío + Fruta + bobas"
+  description String?
+  /// Tema visual de la sección: green | cream | black | purple
+  theme       String    @default("green")
+  emoji       String    @default("🧋")
+  position    Int       @default(0)
+  active      Boolean   @default(true)
+  products    Product[]
+  promos      Promo[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String?
+  price       Decimal     @db.Decimal(10, 2)
+  imageUrl    String?
+  /// nuevo | estrella | null
+  badge       String?
+  size        String? // "16oz", "12oz"
+  featured    Boolean     @default(false)
+  active      Boolean     @default(true)
+  position    Int         @default(0)
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([categoryId])
+}
+
+model Extra {
+  id       String  @id @default(cuid())
+  name     String
+  price    Decimal @db.Decimal(10, 2)
+  active   Boolean @default(true)
+  position Int     @default(0)
+}
+
+model Promo {
+  id         String    @id @default(cuid())
+  title      String // "Sparkling Tea"
+  label      String // "2x20"
+  detail     String? // "Bebidas con Popping boba"
+  price      Decimal   @db.Decimal(10, 2)
+  /// Cantidad de bebidas incluidas en el combo
+  quantity   Int       @default(2)
+  imageUrl   String?
+  theme      String    @default("purple")
+  active     Boolean   @default(true)
+  position   Int       @default(0)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// ───────────────────────────── Pedidos ─────────────────────────────
+
+enum OrderStatus {
+  PENDIENTE
+  CONFIRMADO
+  PREPARANDO
+  ENTREGADO
+  CANCELADO
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  code         String      @unique
+  customerName String
+  phone        String
+  /// recojo | delivery | evento
+  deliveryType String      @default("recojo")
+  address      String?
+  scheduledFor String?
+  notes        String?
+  subtotal     Decimal     @db.Decimal(10, 2)
+  total        Decimal     @db.Decimal(10, 2)
+  status       OrderStatus @default(PENDIENTE)
+  items        OrderItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name      String
+  unitPrice Decimal  @db.Decimal(10, 2)
+  quantity  Int
+  /// Extras elegidos, serializados: [{"name":"Tapioca","price":2}]
+  extras    String   @default("[]")
+  lineTotal Decimal  @db.Decimal(10, 2)
+
+  @@index([orderId])
+}
+
+// ───────────────────────────── Admin / Config ─────────────────────────────
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String   @default("Equipo Roa")
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String
+}

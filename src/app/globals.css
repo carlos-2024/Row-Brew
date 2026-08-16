@@ -1,0 +1,273 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════
+   ROA BREW — Sistema de diseño
+   Retro-groovy tropical: verde bosque, crema, negro y morado pop.
+   ══════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Verdes ──────────────────────────────────────────────
+     Escala completa anclada en el verde primario de la marca:
+     roa-500 = #517e43. Todos los pasos comparten el matiz 106°,
+     así que cualquier combinación se mantiene coherente.        */
+  --color-roa-950: #0d140a;
+  --color-roa-900: #152112;
+  --color-roa-800: #20321b;
+  --color-roa-700: #314c29;
+  --color-roa-600: #406435;
+  --color-roa-500: #517e43; /* ← primario */
+  --color-roa-400: #6ca35c;
+  --color-roa-300: #92bd84;
+  --color-roa-200: #b7d5ae;
+  --color-roa-100: #dbebd6;
+
+  /* Alias del primario, por claridad al leer el código */
+  --color-brand: #517e43;
+
+  /* Neutros cálidos */
+  --color-cream: #f5f1e4;
+  --color-cream-2: #ebe4d1;
+  --color-ink: #0c100b;
+
+  /* Acentos de los posters */
+  --color-grape: #a98bf0;
+  --color-grape-deep: #7c5cd6;
+  --color-berry: #d94a5f;
+  --color-mango: #f2a341;
+  --color-taro: #c9a7e8;
+
+  --font-display: var(--font-bagel), ui-rounded, system-ui, sans-serif;
+  --font-body: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-caveat), cursive;
+
+  --radius-blob: 42% 58% 63% 37% / 41% 44% 56% 59%;
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-spin-slow: spin 22s linear infinite;
+  --animate-wiggle: wiggle 3.5s ease-in-out infinite;
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-rise: rise 9s linear infinite;
+  --animate-shine: shine 3.5s ease-in-out infinite;
+  --animate-marquee: marquee 34s linear infinite;
+  --animate-marquee-rev: marquee-rev 34s linear infinite;
+  --animate-pop-in: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ─────────────────────────── Keyframes ─────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-22px) rotate(2.5deg); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+
+@keyframes blob {
+  0%, 100% { border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; }
+  33%      { border-radius: 63% 37% 41% 59% / 56% 63% 37% 44%; }
+  66%      { border-radius: 37% 63% 56% 44% / 63% 41% 59% 37%; }
+}
+
+/* Popping boba subiendo — el motivo de la marca */
+@keyframes rise {
+  0%   { transform: translateY(0) scale(0.5); opacity: 0; }
+  10%  { opacity: 0.9; }
+  85%  { opacity: 0.55; }
+  100% { transform: translateY(-105vh) scale(1.15); opacity: 0; }
+}
+
+@keyframes shine {
+  0%, 100% { transform: translateX(-120%) skewX(-18deg); }
+  55%      { transform: translateX(240%) skewX(-18deg); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-rev {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(26px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes liquid {
+  0%, 100% { transform: translateX(-4%) translateY(0) rotate(0deg); }
+  50%      { transform: translateX(4%) translateY(-3px) rotate(1.5deg); }
+}
+
+/* ─────────────────────────── Base ─────────────────────────── */
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background: var(--color-roa-950);
+    color: var(--color-cream);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "cv01";
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-grape);
+    color: var(--color-ink);
+  }
+
+  h1, h2, h3, .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: -0.015em;
+  }
+
+  /* Scrollbar con la identidad de la marca */
+  ::-webkit-scrollbar { width: 11px; height: 11px; }
+  ::-webkit-scrollbar-track { background: var(--color-roa-900); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-roa-500);
+    border-radius: 99px;
+    border: 2px solid var(--color-roa-900);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-roa-400); }
+}
+
+/* ─────────────────────────── Utilidades ─────────────────────────── */
+
+@layer utilities {
+  /* Textura de grano sobre los bloques de color */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.32;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Halo de luz difusa */
+  .glow {
+    background: radial-gradient(
+      circle at center,
+      color-mix(in oklab, var(--color-roa-400) 55%, transparent) 0%,
+      transparent 68%
+    );
+    filter: blur(58px);
+  }
+
+  .text-outline {
+    -webkit-text-stroke: 2px currentColor;
+    color: transparent;
+  }
+
+  .text-balance { text-wrap: balance; }
+
+  /* Reveal al hacer scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(34px);
+    transition:
+      opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Tarjeta con borde grueso estilo sticker */
+  .sticker {
+    border: 2px solid var(--color-ink);
+    box-shadow: 5px 5px 0 var(--color-ink);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.25s ease;
+  }
+  .sticker:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--color-ink);
+  }
+
+  .sticker-light {
+    border: 2px solid var(--color-cream);
+    box-shadow: 5px 5px 0 var(--color-cream);
+  }
+  .sticker-light:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--color-cream);
+  }
+
+  /* Botón principal con brillo que barre */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    bottom: -50%;
+    left: 0;
+    width: 45%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.42),
+      transparent
+    );
+    animation: shine 3.5s ease-in-out infinite;
+    z-index: -1;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee 34s linear infinite;
+  }
+  .marquee-track-rev {
+    display: flex;
+    width: max-content;
+    animation: marquee-rev 34s linear infinite;
+  }
+  .marquee-mask:hover .marquee-track,
+  .marquee-mask:hover .marquee-track-rev {
+    animation-play-state: paused;
+  }
+
+  /* Vaso animado: el líquido se mece */
+  .liquid { animation: liquid 5.5s ease-in-out infinite; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Respeta a quien pide menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}
