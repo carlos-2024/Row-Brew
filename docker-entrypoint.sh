@@ -5,8 +5,12 @@ echo "🐕 Roa Brew — iniciando contenedor…"
 
 if [ -n "$DATABASE_URL" ]; then
   echo "→ Sincronizando esquema de base de datos…"
-  ./node_modules/.bin/prisma db push --schema=./prisma/schema.prisma --skip-generate --accept-data-loss || \
-    echo "⚠️  No se pudo sincronizar el esquema (¿la base ya está lista?). Continuando…"
+  # Se invoca el bundle directamente y NO node_modules/.bin/prisma: ese es un
+  # symlink y Docker lo copia como archivo real, con lo que __dirname deja de
+  # apuntar a build/ y el CLI no encuentra su prisma_schema_build_bg.wasm.
+  node ./node_modules/prisma/build/index.js db push \
+    --schema=./prisma/schema.prisma --skip-generate --accept-data-loss || \
+    echo "⚠️  No se pudo sincronizar el esquema. Revisa DATABASE_URL."
 
   # Carga la carta en el primer despliegue. El seed es idempotente y nunca
   # pisa la contraseña de un admin existente, así que dejarlo activo no rompe
@@ -21,4 +25,5 @@ else
 fi
 
 echo "→ Listo. Levantando Next.js en el puerto ${PORT:-3000}"
+echo "   (si ese puerto no coincide con el configurado en EasyPanel, el sitio no cargará)"
 exec "$@"
