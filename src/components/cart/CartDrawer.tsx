@@ -27,7 +27,7 @@ const DELIVERY_OPTIONS = [
 ];
 
 export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) {
-  const { items, count, subtotal, open, setOpen, setQuantity, remove, clear } = useCart();
+  const { items, count, pricing, open, setOpen, setQuantity, remove, clear } = useCart();
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("carrito");
@@ -305,9 +305,43 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
         {/* Pie */}
         {items.length > 0 && (
           <footer className="border-t-2 border-ink/12 bg-cream-2 px-5 py-4">
+            {/* Aviso: falta poco para el combo */}
+            {pricing.hints.map((h) => (
+              <p
+                key={h.id}
+                className="mb-2 rounded-xl border-2 border-dashed border-roa-500 bg-roa-100 px-3 py-2 text-sm font-bold text-roa-700"
+              >
+                Agrega {h.missing} {h.missing === 1 ? "bebida" : "bebidas"} más de{" "}
+                {h.title} y se te aplica el {h.label}
+              </p>
+            ))}
+
+            {pricing.applied.length > 0 && (
+              <div className="mb-3 space-y-1">
+                <div className="flex items-baseline justify-between text-sm text-ink/55">
+                  <span>Subtotal</span>
+                  <span>{money(pricing.subtotal)}</span>
+                </div>
+                {pricing.applied.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-baseline justify-between text-sm font-bold text-roa-600"
+                  >
+                    <span>
+                      {p.title} {p.label}
+                      {p.bundles > 1 ? ` ×${p.bundles}` : ""}
+                    </span>
+                    <span>−{money(p.saved)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="mb-3 flex items-baseline justify-between">
               <span className="font-hand text-2xl text-roa-600">total</span>
-              <span className="font-display text-3xl text-ink">{money(subtotal)}</span>
+              <span className="font-display text-3xl text-ink">
+                {money(pricing.total)}
+              </span>
             </div>
 
             {step === "carrito" ? (

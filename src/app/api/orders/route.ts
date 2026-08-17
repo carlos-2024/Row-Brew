@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { orderCode, toNumber } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
+import { getAutoPromos } from "@/lib/menu";
+import { priceCart, type PriceableItem } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -59,10 +61,14 @@ export async function POST(request: Request) {
   try {
     // Los precios SIEMPRE se recalculan aquí; nunca se confía en el cliente.
     const productIds = [...new Set(items.map((i) => i.productId))];
-    const [products, dbExtras, settings] = await Promise.all([
-      prisma.product.findMany({ where: { id: { in: productIds }, active: true } }),
+    const [products, dbExtras, settings, promos] = await Promise.all([
+      prisma.product.findMany({
+        where: { id: { in: productIds }, active: true },
+        include: { category: { select: { slug: true } } },
+      }),
       prisma.extra.findMany({ where: { active: true } }),
       getSettings(),
+      getAutoPromos(),
     ]);
 
     const productById = new Map(products.map((p) => [p.id, p]));
@@ -71,7 +77,7 @@ export async function POST(request: Request) {
     );
 
     const lines = [];
-    let subtotal = 0;
+    const priceable: PriceableItem[] = [];
 
     for (const item of items) {
       const product = productById.get(item.productId);
@@ -87,9 +93,17 @@ export async function POST(request: Request) {
         .filter((e) => extraByName.has(e.name.toLowerCase()));
 
       const extrasTotal = extras.reduce((s, e) => s + e.price, 0);
-      const unitPrice = toNumber(product.price) + extrasTotal;
+      const basePrice = toNumber(product.price);
+      const unitPrice = basePrice + extrasTotal;
       const lineTotal = unitPrice * quantity;
-      subtotal += lineTotal;
+
+      priceable.push({
+        basePrice,
+        extrasTotal,
+        quantity,
+        categorySlug: product.category.slug,
+        promoEligible: product.promoEligible,
+      });
 
       lines.push({
         productId: product.id,
@@ -109,6 +123,9 @@ export async function POST(request: Request) {
       );
     }
 
+    // Las promociones se calculan acá, con las reglas de la base. Lo que el
+    // navegador haya mostrado es solo informativo.
+    const pricing = priceCart(priceable, promos);
     const code = orderCode();
 
     const order = await prisma.order.create({
@@ -120,8 +137,8 @@ export async function POST(request: Request) {
         address: (body.address ?? "").trim() || null,
         scheduledFor: (body.scheduledFor ?? "").trim() || null,
         notes: (body.notes ?? "").trim() || null,
-        subtotal,
-        total: subtotal,
+        subtotal: pricing.subtotal,
+        total: pricing.total,
         items: {
           create: lines.map(({ extrasLabel: _extrasLabel, ...line }) => line),
         },
@@ -144,8 +161,18 @@ export async function POST(request: Request) {
         (l) =>
           `• ${l.quantity}x ${l.name}${l.extrasLabel ? ` (+ ${l.extrasLabel})` : ""} — ${cur} ${l.lineTotal.toFixed(2)}`
       ),
+      ...(pricing.applied.length > 0
+        ? [
+            ``,
+            `Subtotal: ${cur} ${pricing.subtotal.toFixed(2)}`,
+            ...pricing.applied.map(
+              (p) =>
+                `Promo ${p.title} ${p.label}${p.bundles > 1 ? ` x${p.bundles}` : ""}: -${cur} ${p.saved.toFixed(2)}`
+            ),
+          ]
+        : []),
       ``,
-      `*Total: ${cur} ${subtotal.toFixed(2)}*`,
+      `*Total: ${cur} ${pricing.total.toFixed(2)}*`,
       body.notes?.trim() ? `` : null,
       body.notes?.trim() ? `*Notas:* ${body.notes.trim()}` : null,
     ]
@@ -154,7 +181,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       code: order.code,
-      total: subtotal,
+      total: pricing.total,
+      discount: pricing.discount,
       message,
     });
   } catch (error) {

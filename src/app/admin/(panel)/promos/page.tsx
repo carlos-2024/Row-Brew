@@ -115,13 +115,27 @@ export default async function PromosPage() {
                   />
                 </Field>
 
-                <div className="sm:col-span-3">
+                <div className="grid gap-3 sm:col-span-4 sm:grid-cols-2">
                   <Toggle name="active" label="Promo activa" defaultChecked={promo.active} />
+                  <Toggle
+                    name="autoApply"
+                    label="Cobrar sola en el carrito"
+                    defaultChecked={promo.autoApply}
+                  />
                 </div>
 
-                <div className="flex items-end gap-2 sm:col-span-3">
+                <div className="flex items-end gap-2 sm:col-span-2">
                   <Button variant="primary">Guardar</Button>
                 </div>
+
+                {promo.autoApply && (
+                  <p className="sm:col-span-6 rounded-xl border-2 border-roa-500/40 bg-roa-500/10 px-3 py-2 text-xs text-roa-300">
+                    Al juntar {promo.quantity} bebidas de esta categoría, el carrito
+                    cobra {promo.price.toString()} en vez de la suma suelta. Puedes
+                    excluir bebidas puntuales desde el interruptor
+                    <strong> Entra en la promo</strong> de cada producto.
+                  </p>
+                )}
               </form>
 
               <form action={deletePromo} className="mt-3 border-t-2 border-cream/8 pt-3">
@@ -182,6 +196,7 @@ export default async function PromosPage() {
             <input type="hidden" name="quantity" value="2" />
             <input type="hidden" name="position" value={promos.length} />
             <Toggle name="active" label="Promo activa" defaultChecked />
+            <Toggle name="autoApply" label="Cobrar sola en el carrito" />
             <Button variant="primary" className="w-full">
               Crear promo
             </Button>

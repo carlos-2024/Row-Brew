@@ -8,6 +8,7 @@ export type MenuProduct = {
   badge: string | null;
   size: string | null;
   featured: boolean;
+  promoEligible: boolean;
   categorySlug: string;
   categoryName: string;
 };
@@ -51,4 +52,5 @@ export type CartItem = {
   quantity: number;
   extras: CartExtra[];
   categorySlug: string;
+  promoEligible: boolean;
 };

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { toNumber } from "@/lib/format";
 import type { MenuCategory, MenuExtra, MenuProduct, PromoView } from "@/lib/types";
+import type { PromoRule } from "@/lib/pricing";
 
 /** Carta completa, agrupada por categoría y lista para el cliente. */
 export async function getMenu(): Promise<MenuCategory[]> {
@@ -34,6 +35,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
         badge: p.badge,
         size: p.size,
         featured: p.featured,
+        promoEligible: p.promoEligible,
         categorySlug: c.slug,
         categoryName: c.name,
       })),
@@ -66,6 +68,33 @@ export async function getPromos(): Promise<PromoView[]> {
       imageUrl: p.imageUrl,
       categorySlug: p.category?.slug ?? null,
     }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Promos que el carrito cobra solas. Se ordenan por `position` y luego se
+ * deja una sola por categoría, para que el precio sea siempre predecible.
+ */
+export async function getAutoPromos(): Promise<PromoRule[]> {
+  try {
+    const promos = await prisma.promo.findMany({
+      where: { active: true, autoApply: true, categoryId: { not: null } },
+      orderBy: { position: "asc" },
+      include: { category: { select: { slug: true } } },
+    });
+
+    return promos
+      .filter((p) => p.category?.slug)
+      .map((p) => ({
+        id: p.id,
+        title: p.title,
+        label: p.label,
+        categorySlug: p.category!.slug,
+        quantity: p.quantity,
+        price: toNumber(p.price),
+      }));
   } catch {
     return [];
   }

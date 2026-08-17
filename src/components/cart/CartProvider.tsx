@@ -10,13 +10,17 @@ import {
   type ReactNode,
 } from "react";
 import type { CartExtra, CartItem, MenuProduct } from "@/lib/types";
+import { priceCart, type PriceBreakdown, type PromoRule } from "@/lib/pricing";
 
 const STORAGE_KEY = "roabrew.cart.v1";
 
 type CartContext = {
   items: CartItem[];
   count: number;
+  /** Todo a precio de lista */
   subtotal: number;
+  /** Desglose con promociones aplicadas */
+  pricing: PriceBreakdown;
   open: boolean;
   lastAdded: string | null;
   setOpen: (v: boolean) => void;
@@ -33,7 +37,13 @@ function lineKey(productId: string, extras: CartExtra[]): string {
   return sig ? `${productId}::${sig}` : productId;
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({
+  children,
+  promos = [],
+}: {
+  children: ReactNode;
+  promos?: PromoRule[];
+}) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [open, setOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -43,7 +53,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw));
+      if (raw) {
+        // Los carritos guardados antes de que existieran las promos no traen
+        // promoEligible; se asume que sí entran.
+        const saved = JSON.parse(raw) as CartItem[];
+        setItems(saved.map((i) => ({ ...i, promoEligible: i.promoEligible ?? true })));
+      }
     } catch {
       /* carrito corrupto: se ignora */
     }
@@ -88,6 +103,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             quantity,
             extras,
             categorySlug: product.categorySlug,
+            promoEligible: product.promoEligible,
           },
         ];
       });
@@ -111,21 +127,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clear = useCallback(() => setItems([]), []);
 
-  const { count, subtotal } = useMemo(() => {
-    let count = 0;
-    let subtotal = 0;
-    for (const item of items) {
-      const unit = item.price + item.extras.reduce((s, e) => s + e.price, 0);
-      count += item.quantity;
-      subtotal += unit * item.quantity;
-    }
-    return { count, subtotal };
-  }, [items]);
+  const count = useMemo(
+    () => items.reduce((sum, i) => sum + i.quantity, 0),
+    [items]
+  );
+
+  const pricing = useMemo(
+    () =>
+      priceCart(
+        items.map((i) => ({
+          basePrice: i.price,
+          extrasTotal: i.extras.reduce((s, e) => s + e.price, 0),
+          quantity: i.quantity,
+          categorySlug: i.categorySlug,
+          promoEligible: i.promoEligible ?? true,
+        })),
+        promos
+      ),
+    [items, promos]
+  );
 
   const value: CartContext = {
     items,
     count,
-    subtotal,
+    subtotal: pricing.subtotal,
+    pricing,
     open,
     lastAdded,
     setOpen,

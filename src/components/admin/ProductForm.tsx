@@ -15,6 +15,7 @@ type Product = {
   badge: string | null;
   size: string | null;
   featured: boolean;
+  promoEligible: boolean;
   active: boolean;
   position: number;
   categoryId: string;
@@ -131,7 +132,7 @@ export default function ProductForm({
             />
           </Field>
 
-          <div className="grid gap-3 sm:col-span-2 sm:grid-cols-2">
+          <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
             <Toggle
               name="active"
               label="Visible en la carta"
@@ -141,6 +142,11 @@ export default function ProductForm({
               name="featured"
               label="Destacado en la home"
               defaultChecked={product?.featured ?? false}
+            />
+            <Toggle
+              name="promoEligible"
+              label="Entra en la promo"
+              defaultChecked={product?.promoEligible ?? true}
             />
           </div>
         </div>

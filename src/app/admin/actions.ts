@@ -72,6 +72,7 @@ export async function saveProduct(formData: FormData) {
     badge: str(formData, "badge") || null,
     size: str(formData, "size") || null,
     featured: bool(formData, "featured"),
+    promoEligible: bool(formData, "promoEligible"),
     active: bool(formData, "active"),
     position: num(formData, "position"),
     categoryId,
@@ -172,6 +173,7 @@ export async function savePromo(formData: FormData) {
     theme: str(formData, "theme") || "purple",
     imageUrl: str(formData, "imageUrl") || null,
     position: num(formData, "position"),
+    autoApply: bool(formData, "autoApply"),
     active: bool(formData, "active"),
     categoryId: str(formData, "categoryId") || null,
   };

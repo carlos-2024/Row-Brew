@@ -462,16 +462,12 @@ async function main() {
   let totalProducts = 0;
   for (const [catIndex, cat] of CATALOG.entries()) {
     const slug = slugify(cat.name);
+    // update vacío a propósito: el seed solo crea lo que falta y NUNCA pisa lo
+    // que se haya editado desde el panel. Antes reescribía todo en cada
+    // arranque y borraba los cambios del equipo.
     const category = await prisma.category.upsert({
       where: { slug },
-      update: {
-        name: cat.name,
-        tagline: cat.tagline,
-        description: cat.description,
-        theme: cat.theme,
-        emoji: cat.emoji,
-        position: catIndex,
-      },
+      update: {},
       create: {
         name: cat.name,
         slug,
@@ -487,16 +483,7 @@ async function main() {
       const pSlug = slugify(item.name);
       await prisma.product.upsert({
         where: { slug: pSlug },
-        update: {
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          badge: item.badge ?? null,
-          size: item.size ?? null,
-          featured: item.featured ?? false,
-          position: i,
-          categoryId: category.id,
-        },
+        update: {}, // nunca se pisan precios ni textos editados a mano
         create: {
           name: item.name,
           slug: pSlug,
@@ -533,11 +520,8 @@ async function main() {
       position: i,
       categoryId: category?.id ?? null,
     };
-    if (existing) {
-      await prisma.promo.update({ where: { id: existing.id }, data });
-    } else {
-      await prisma.promo.create({ data });
-    }
+    // Igual que arriba: si la promo ya existe se respeta tal cual quedó.
+    if (!existing) await prisma.promo.create({ data });
   }
   console.log(`🏷️  ${PROMOS.length} promos cargadas`);
 
