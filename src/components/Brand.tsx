@@ -12,15 +12,17 @@ import { KodaMark } from "@/components/Logo";
  */
 export function KodaLogo({
   className = "",
-  invert = false,
+  /** Usa la versión blanca del logo, para fondos oscuros */
+  white = false,
 }: {
   className?: string;
-  /** El PNG original es negro sobre blanco: en fondos oscuros conviene invertirlo */
-  invert?: boolean;
+  white?: boolean;
 }) {
-  // Se prueba primero el PNG (por si algún día llega con transparencia) y
-  // después el JPG. Si ninguno existe, se dibuja el trazo vectorial.
-  const CANDIDATES = ["/img/koda.png", "/img/koda.jpg"];
+  // Ambos PNG tienen transparencia; el .jpg queda como último recurso por si
+  // alguien repone el archivo antiguo. Si no hay ninguno, se dibuja el vector.
+  const CANDIDATES = white
+    ? ["/img/kodaWhite.png"]
+    : ["/img/koda.png", "/img/koda.jpg"];
   const [attempt, setAttempt] = useState(0);
   const ref = useRef<HTMLImageElement>(null);
 
@@ -42,8 +44,7 @@ export function KodaLogo({
       src={CANDIDATES[attempt]}
       alt="Koda, la mascota de Roa Brew"
       onError={() => setAttempt((a) => a + 1)}
-      className={`${className} object-contain ${invert ? "invert" : ""}`}
-      style={{ mixBlendMode: invert ? "screen" : "multiply" }}
+      className={`${className} object-contain`}
     />
   );
 }

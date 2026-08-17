@@ -1,4 +1,3 @@
-import { KodaMark } from "@/components/Logo";
 import { Sparkle } from "@/components/Leaf";
 import { BobaIcon } from "@/components/Icons";
 import type { LoyaltyStatus } from "@/lib/loyalty";
@@ -90,7 +89,12 @@ export default function StampCard({ status, name, dni, animate = true }: Props) 
                       : { transform: "rotate(-5deg)" }
                   }
                 >
-                  <KodaMark className="h-3/5 w-3/5" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/img/kodaWhite.png"
+                    alt="Sello de Roa Brew"
+                    className="h-4/5 w-4/5 object-contain"
+                  />
                 </span>
               ) : (
                 <span className="absolute inset-0 grid place-items-center text-ink/25">

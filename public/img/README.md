@@ -4,18 +4,23 @@
 
 | Archivo | Estado | Dónde aparece |
 |---|---|---|
-| `logoheader.png` | ✅ cargado — PNG transparente 1024×1536 | Sello vertical colgando del header, en todas las páginas |
-| `koda.jpg` | ✅ cargado — JPEG 1080×1080, fondo blanco | Sección "Experiencia Roa Brew" |
+| `logoheader.png` | ✅ PNG transparente 1024×1536 | Sello vertical colgando del header, en todas las páginas |
+| `koda.png` | ✅ PNG transparente 1080×1080, trazo negro | Sección "Experiencia Roa Brew" |
+| `kodaWhite.png` | ✅ PNG transparente 1080×1080, trazo blanco | Sellos de la tarjeta de fidelidad |
 
 **`logoheader.png`** — el sello verde vertical. Se encoge solo al hacer scroll
-(125px arriba del todo → 86px con la página desplazada). Si el archivo falta,
+(160px arriba del todo → 96px con la página desplazada). Si el archivo falta,
 el header vuelve al wordmark tipográfico y nada se rompe.
 
-**`koda.jpg`** — el componente busca primero `koda.png` y después `koda.jpg`.
-Como este JPEG tiene fondo blanco, se le aplica `mix-blend-mode: multiply` para
-que el blanco desaparezca; por eso hoy solo se usa sobre la sección crema.
-**Si consigues el perrito en PNG con transparencia**, guárdalo como `koda.png` y
-se usa solo — ahí se puede llevar también a los vasos, al favicon y al header móvil.
+**`koda.png`** — versión negra, para fondos claros. Como ya trae transparencia,
+se usa directo, sin trucos de mezcla.
+
+**`kodaWhite.png`** — versión blanca, para fondos oscuros. Es la que se estampa
+en cada casilla llena de la tarjeta de fidelidad, tanto en la página pública
+como en el panel.
+
+Si algún archivo falta, el sitio cae a una versión vectorial simplificada y
+nada se rompe.
 
 ## Bebidas
 

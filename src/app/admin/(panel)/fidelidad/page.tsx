@@ -26,7 +26,6 @@ import {
   inputClass,
 } from "@/components/admin/ui";
 import { SearchIcon, CakeIcon } from "@/components/Icons";
-import { KodaMark } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -187,7 +186,16 @@ export default async function FidelidadPage({
                                     : "border-cream/12 text-cream/25"
                             }`}
                           >
-                            {filled ? <KodaMark className="h-4 w-4" /> : n}
+                            {filled ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src="/img/kodaWhite.png"
+                                alt=""
+                                className="h-5 w-5 object-contain"
+                              />
+                            ) : (
+                              n
+                            )}
                           </span>
                         );
                       })}
