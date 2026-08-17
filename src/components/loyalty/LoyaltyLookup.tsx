@@ -20,6 +20,7 @@ export default function LoyaltyLookup() {
   const [dni, setDni] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [birthday, setBirthday] = useState("");
   const [card, setCard] = useState<CardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,7 +58,7 @@ export default function LoyaltyLookup() {
       const res = await fetch("/api/fidelidad", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dni, name, phone }),
+        body: JSON.stringify({ dni, name, phone, birthday }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "No pudimos crear tu tarjeta.");
@@ -76,6 +77,7 @@ export default function LoyaltyLookup() {
     setDni("");
     setName("");
     setPhone("");
+    setBirthday("");
     setError(null);
     setView("buscar");
   }
@@ -143,16 +145,32 @@ export default function LoyaltyLookup() {
         </label>
 
         <label className="mt-4 block">
-          <span className="mb-1.5 block text-sm font-bold text-roa-700">
-            WhatsApp <span className="font-normal text-ink/40">(opcional)</span>
-          </span>
+          <span className="mb-1.5 block text-sm font-bold text-roa-700">WhatsApp</span>
           <input
+            required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             inputMode="tel"
             placeholder="999 999 999"
             className={INPUT}
           />
+        </label>
+
+        <label className="mt-4 block">
+          <span className="mb-1.5 block text-sm font-bold text-roa-700">
+            Fecha de nacimiento
+          </span>
+          <input
+            required
+            type="date"
+            value={birthday}
+            onChange={(e) => setBirthday(e.target.value)}
+            max={new Date().toISOString().slice(0, 10)}
+            className={INPUT}
+          />
+          <span className="mt-1 block text-xs text-ink/45">
+            La usamos solo para regalarte una bebida en tu cumpleaños.
+          </span>
         </label>
 
         {error && (

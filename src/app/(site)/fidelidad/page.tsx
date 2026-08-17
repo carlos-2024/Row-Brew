@@ -38,6 +38,8 @@ export default function FidelidadPage() {
     cycles: 1,
     totalStamps: 16,
     midRewardUsed: false,
+    birthday: new Date(Date.UTC(1996, 4, 14)),
+    birthdayRewardYear: null,
   });
 
   return (
@@ -62,7 +64,8 @@ export default function FidelidadPage() {
             Cada bebida suma un sello. A los <strong className="text-cream">{LOYALTY_MID_GOAL}</strong>{" "}
             agrandas tu bebida o pides una de cortesía. A los{" "}
             <strong className="text-cream">{LOYALTY_GOAL}</strong>, la siguiente va por
-            la casa.
+            la casa. Y en tu cumpleaños,{" "}
+            <strong className="text-cream">una bebida de regalo</strong>.
           </p>
 
           <div className="mt-12">
@@ -76,6 +79,7 @@ export default function FidelidadPage() {
           items={[
             `${LOYALTY_MID_GOAL} SELLOS · AGRANDA O CORTESÍA`,
             `${LOYALTY_GOAL} SELLOS · BEBIDA GRATIS`,
+            "CUMPLEAÑOS · BEBIDA DE REGALO",
             "SIN MÍNIMO DE CONSUMO",
             "TU DNI ES TU TARJETA",
           ]}

@@ -7,8 +7,11 @@ import { slugify } from "@/lib/format";
 import {
   LOYALTY_GOAL,
   LOYALTY_MID_GOAL,
+  isBirthdayWindow,
   isValidDni,
+  isValidPhone,
   normalizeDni,
+  parseBirthday,
 } from "@/lib/loyalty";
 import type { OrderStatus } from "@prisma/client";
 
@@ -258,9 +261,13 @@ export async function createLoyaltyCustomer(formData: FormData) {
 
   const dni = normalizeDni(str(formData, "dni"));
   const name = str(formData, "name");
+  const phone = str(formData, "phone");
+  const birthday = parseBirthday(str(formData, "birthday"));
 
   if (!isValidDni(dni)) throw new Error("Documento inválido (8 a 12 caracteres).");
   if (name.length < 2) throw new Error("El nombre es obligatorio.");
+  if (!isValidPhone(phone)) throw new Error("El WhatsApp debe tener 9 dígitos.");
+  if (!birthday) throw new Error("La fecha de nacimiento es obligatoria.");
 
   const existing = await prisma.loyaltyCustomer.findUnique({ where: { dni } });
   if (existing) throw new Error(`Ya existe una tarjeta con el documento ${dni}.`);
@@ -269,7 +276,8 @@ export async function createLoyaltyCustomer(formData: FormData) {
     data: {
       dni,
       name,
-      phone: str(formData, "phone") || null,
+      phone,
+      birthday,
       notes: str(formData, "notes") || null,
     },
   });
@@ -283,6 +291,8 @@ export async function updateLoyaltyCustomer(formData: FormData) {
   const id = str(formData, "id");
   if (!id) return;
 
+  const birthday = parseBirthday(str(formData, "birthday"));
+
   await prisma.loyaltyCustomer.update({
     where: { id },
     data: {
@@ -290,8 +300,40 @@ export async function updateLoyaltyCustomer(formData: FormData) {
       phone: str(formData, "phone") || null,
       notes: str(formData, "notes") || null,
       active: bool(formData, "active"),
+      // Solo se pisa si mandaron una fecha válida, para no borrarla sin querer
+      ...(birthday ? { birthday } : {}),
     },
   });
+
+  revalidatePath("/admin/fidelidad");
+}
+
+/** Canjea la bebida de regalo de cumpleaños. Una vez por año. */
+export async function redeemBirthdayReward(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const customer = await prisma.loyaltyCustomer.findUnique({ where: { id } });
+  if (!customer) return;
+
+  const year = new Date().getUTCFullYear();
+  if (!isBirthdayWindow(customer.birthday) || customer.birthdayRewardYear === year) {
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.loyaltyCustomer.update({
+      where: { id },
+      data: { birthdayRewardYear: year },
+    }),
+    prisma.loyaltyEvent.create({
+      data: {
+        customerId: id,
+        type: "PREMIO_CUMPLE",
+        note: `Bebida de cumpleaños ${year}`,
+      },
+    }),
+  ]);
 
   revalidatePath("/admin/fidelidad");
 }

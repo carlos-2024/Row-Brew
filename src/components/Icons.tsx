@@ -92,6 +92,18 @@ export function ColdBrewIcon({ className = "" }: IconProps) {
   );
 }
 
+/** Torta de cumpleaños */
+export function CakeIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="M3.5 21h17v-6.2a2.3 2.3 0 0 0-2.3-2.3H5.8a2.3 2.3 0 0 0-2.3 2.3V21Z" />
+      <path d="M3.5 16.4c1.4 0 1.4 1.3 2.8 1.3s1.4-1.3 2.8-1.3 1.4 1.3 2.9 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.9-1.3" />
+      <path d="M8 12.5V9.6M12 12.5V9.6M16 12.5V9.6" />
+      <path d="M8 7.4c0-1 1-1.3 1-2.3M12 7.4c0-1 1-1.3 1-2.3M16 7.4c0-1 1-1.3 1-2.3" />
+    </svg>
+  );
+}
+
 export function SearchIcon({ className = "" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>

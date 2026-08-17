@@ -119,8 +119,23 @@ export default function StampCard({ status, name, dni, animate = true }: Props) 
         })}
       </div>
 
+      {/* Aviso de cumpleaños */}
+      {status.birthdayAvailable && (
+        <div className="mt-6 flex items-center gap-4 rounded-2xl border-2 border-ink bg-berry px-5 py-4 text-cream animate-[prize-pulse_2s_ease-in-out_infinite]">
+          <Sparkle className="h-8 w-8 shrink-0 animate-spin-slow" />
+          <div>
+            <p className="font-display text-2xl leading-none">¡Feliz cumpleaños!</p>
+            <p className="mt-1 text-sm text-cream/85">
+              Tienes una bebida de regalo. Pídela en barra durante esta semana.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Premios */}
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+      <div
+        className={`mt-8 grid gap-3 ${status.birthday ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}
+      >
         <RewardBox
           active={status.midAvailable}
           used={status.midRewardUsed}
@@ -135,6 +150,15 @@ export default function StampCard({ status, name, dni, animate = true }: Props) 
           title={`${status.goal} sellos`}
           text="Una bebida completamente gratis"
         />
+        {status.birthday && (
+          <RewardBox
+            active={status.birthdayAvailable}
+            used={status.isBirthdayWeek && !status.birthdayAvailable}
+            tone="berry"
+            title="Cumpleaños"
+            text={`Bebida de regalo en tu semana (${status.birthday})`}
+          />
+        )}
       </div>
     </div>
   );
@@ -149,13 +173,14 @@ function RewardBox({
 }: {
   active: boolean;
   used: boolean;
-  tone: "grape" | "mango";
+  tone: "grape" | "mango" | "berry";
   title: string;
   text: string;
 }) {
   const tones = {
     grape: "bg-grape",
     mango: "bg-mango",
+    berry: "bg-berry text-cream",
   };
 
   return (

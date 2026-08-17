@@ -127,6 +127,7 @@ enum LoyaltyEventType {
   SELLO
   PREMIO_MEDIO
   PREMIO_COMPLETO
+  PREMIO_CUMPLE
   AJUSTE
 }
 
@@ -135,7 +136,14 @@ model LoyaltyCustomer {
   /// DNI o carné de extranjería
   dni   String  @unique
   name  String
+  /// Obligatorio en los formularios; nullable en base solo para no romper
+  /// las tarjetas creadas antes de que el campo fuera exigido.
   phone String?
+
+  /// Fecha de nacimiento. Solo se usan día y mes para el premio.
+  birthday           DateTime?
+  /// Último año en que canjeó el premio de cumpleaños (uno por año)
+  birthdayRewardYear Int?
 
   /// Sellos del ciclo actual (0 … meta)
   stamps        Int     @default(0)

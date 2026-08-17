@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import {
   isValidDni,
+  isValidPhone,
   loyaltyMessage,
   loyaltyStatus,
   maskDni,
   normalizeDni,
+  parseBirthday,
   shortName,
 } from "@/lib/loyalty";
 
@@ -99,7 +101,7 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { dni?: string; name?: string; phone?: string };
+  let body: { dni?: string; name?: string; phone?: string; birthday?: string };
   try {
     body = await request.json();
   } catch {
@@ -109,6 +111,7 @@ export async function POST(request: Request) {
   const dni = normalizeDni(body.dni ?? "");
   const name = (body.name ?? "").trim();
   const phone = (body.phone ?? "").trim();
+  const birthday = parseBirthday(body.birthday ?? "");
 
   if (!isValidDni(dni)) {
     return NextResponse.json(
@@ -118,6 +121,18 @@ export async function POST(request: Request) {
   }
   if (name.length < 2) {
     return NextResponse.json({ error: "Ingresa tu nombre." }, { status: 400 });
+  }
+  if (!isValidPhone(phone)) {
+    return NextResponse.json(
+      { error: "Ingresa un WhatsApp válido de 9 dígitos." },
+      { status: 400 }
+    );
+  }
+  if (!birthday) {
+    return NextResponse.json(
+      { error: "Ingresa tu fecha de nacimiento para activar tu premio de cumpleaños." },
+      { status: 400 }
+    );
   }
 
   try {
@@ -135,7 +150,7 @@ export async function POST(request: Request) {
     }
 
     const customer = await prisma.loyaltyCustomer.create({
-      data: { dni, name, phone: phone || null },
+      data: { dni, name, phone, birthday },
     });
 
     const status = loyaltyStatus(customer);

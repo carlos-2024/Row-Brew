@@ -12,6 +12,7 @@ import {
   removeLoyaltyStamp,
   redeemMidReward,
   redeemFullReward,
+  redeemBirthdayReward,
   createLoyaltyCustomer,
   deleteLoyaltyCustomer,
 } from "@/app/admin/actions";
@@ -24,7 +25,7 @@ import {
   StatCard,
   inputClass,
 } from "@/components/admin/ui";
-import { SearchIcon } from "@/components/Icons";
+import { SearchIcon, CakeIcon } from "@/components/Icons";
 import { KodaMark } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +47,9 @@ export default async function FidelidadPage({
       }
     : undefined;
 
-  const [customers, total, conPremio, sellosMes] = await Promise.all([
+  const mesActual = new Date().getUTCMonth() + 1;
+
+  const [customers, total, conPremio, sellosMes, cumpleMes] = await Promise.all([
     prisma.loyaltyCustomer.findMany({
       where,
       orderBy: { updatedAt: "desc" },
@@ -64,13 +67,19 @@ export default async function FidelidadPage({
       },
       _sum: { quantity: true },
     }),
+    // Prisma no filtra por mes de una fecha, así que va en SQL directo
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*)::bigint AS count
+      FROM "LoyaltyCustomer"
+      WHERE EXTRACT(MONTH FROM "birthday") = ${mesActual}
+    `,
   ]);
 
   return (
     <>
       <AdminHeader kicker="clientes" title="Fidelidad" />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Clientes registrados" value={total} tone="green" />
         <StatCard
           label="Con premio disponible"
@@ -82,6 +91,12 @@ export default async function FidelidadPage({
           label="Sellos este mes"
           value={sellosMes._sum.quantity ?? 0}
           tone="grape"
+        />
+        <StatCard
+          label="Cumpleaños este mes"
+          value={Number(cumpleMes[0]?.count ?? 0)}
+          tone="cream"
+          hint="Buen momento para escribirles"
         />
       </div>
 
@@ -129,7 +144,8 @@ export default async function FidelidadPage({
                         <p className="font-display text-2xl text-cream">{c.name}</p>
                         <p className="text-sm text-cream/45">
                           DNI {c.dni}
-                          {c.phone ? ` · ${c.phone}` : ""}
+                          {c.phone ? ` · ${c.phone}` : " · sin WhatsApp"}
+                          {s.birthday ? ` · cumple ${s.birthday}` : " · sin cumpleaños"}
                         </p>
                         {c.events[0] && (
                           <p className="mt-1 text-xs text-cream/35">
@@ -178,8 +194,19 @@ export default async function FidelidadPage({
                     </div>
 
                     {/* Avisos de premio */}
-                    {(s.midAvailable || s.fullAvailable) && (
+                    {(s.midAvailable || s.fullAvailable || s.isBirthdayWeek) && (
                       <div className="mt-3 flex flex-wrap gap-2">
+                        {s.birthdayAvailable && (
+                          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink bg-berry px-3 py-1 text-xs font-black text-cream">
+                            <CakeIcon className="h-4 w-4" />
+                            CUMPLEAÑOS — BEBIDA DE REGALO
+                          </span>
+                        )}
+                        {s.isBirthdayWeek && !s.birthdayAvailable && (
+                          <span className="rounded-full border-2 border-cream/25 px-3 py-1 text-xs font-black text-cream/45">
+                            CUMPLEAÑOS YA CANJEADO ESTE AÑO
+                          </span>
+                        )}
                         {s.fullAvailable && (
                           <span className="rounded-full border-2 border-ink bg-mango px-3 py-1 text-xs font-black text-ink">
                             ★ BEBIDA GRATIS DISPONIBLE
@@ -250,6 +277,17 @@ export default async function FidelidadPage({
                         </Button>
                       </form>
 
+                      <form action={redeemBirthdayReward}>
+                        <input type="hidden" name="id" value={c.id} />
+                        <Button
+                          variant="ghost"
+                          className="!px-4 !py-2 !text-sm"
+                          disabled={!s.birthdayAvailable}
+                        >
+                          Canjear cumpleaños
+                        </Button>
+                      </form>
+
                       <form action={deleteLoyaltyCustomer} className="ml-auto">
                         <input type="hidden" name="id" value={c.id} />
                         <Button variant="danger" className="!px-4 !py-2 !text-sm">
@@ -292,8 +330,23 @@ export default async function FidelidadPage({
                 className={inputClass}
               />
             </Field>
-            <Field label="WhatsApp (opcional)">
-              <input name="phone" placeholder="999 999 999" className={inputClass} />
+            <Field label="WhatsApp">
+              <input
+                name="phone"
+                required
+                inputMode="tel"
+                placeholder="999 999 999"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Fecha de nacimiento" hint="Activa su premio de cumpleaños">
+              <input
+                name="birthday"
+                type="date"
+                required
+                max={new Date().toISOString().slice(0, 10)}
+                className={inputClass}
+              />
             </Field>
             <Field label="Notas (opcional)">
               <textarea
