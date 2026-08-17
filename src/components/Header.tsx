@@ -10,6 +10,7 @@ import { useCart } from "@/components/cart/CartProvider";
 const NAV = [
   { href: "/carta", label: "Carta" },
   { href: "/#promos", label: "Promos" },
+  { href: "/fidelidad", label: "Fidelidad" },
   { href: "/#experiencia", label: "Experiencia" },
   { href: "/#contacto", label: "Contacto" },
 ];

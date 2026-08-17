@@ -109,7 +109,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={`rounded-full border-2 px-5 py-2.5 font-bold transition ${variants[variant]} ${className}`}
+      className={`rounded-full border-2 px-5 py-2.5 font-bold transition disabled:pointer-events-none disabled:opacity-35 ${variants[variant]} ${className}`}
       {...rest}
     >
       {children}

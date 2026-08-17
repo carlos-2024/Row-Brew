@@ -100,6 +100,20 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* El sello cae, rebota y queda ligeramente torcido */
+@keyframes stamp-in {
+  0%   { transform: scale(2.6) rotate(-22deg); opacity: 0; }
+  55%  { transform: scale(0.88) rotate(6deg); opacity: 1; }
+  75%  { transform: scale(1.06) rotate(-8deg); }
+  100% { transform: scale(1) rotate(-5deg); opacity: 1; }
+}
+
+/* Latido suave para el premio ya desbloqueado */
+@keyframes prize-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-mango) 70%, transparent); }
+  50%      { transform: scale(1.06); box-shadow: 0 0 0 12px transparent; }
+}
+
 @keyframes liquid {
   0%, 100% { transform: translateX(-4%) translateY(0) rotate(0deg); }
   50%      { transform: translateX(4%) translateY(-3px) rotate(1.5deg); }

@@ -13,6 +13,7 @@ import {
   GearIcon,
   ExternalIcon,
   PowerIcon,
+  PawIcon,
 } from "@/components/Icons";
 
 const LINKS = [
@@ -21,6 +22,7 @@ const LINKS = [
   { href: "/admin/productos", label: "Productos", Icon: BobaIcon },
   { href: "/admin/categorias", label: "Categorías", Icon: FolderIcon },
   { href: "/admin/promos", label: "Promos", Icon: TagIcon },
+  { href: "/admin/fidelidad", label: "Fidelidad", Icon: PawIcon },
   { href: "/admin/ajustes", label: "Ajustes", Icon: GearIcon },
 ];
 

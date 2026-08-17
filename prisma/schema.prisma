@@ -121,6 +121,53 @@ model OrderItem {
   @@index([orderId])
 }
 
+// ───────────────────────────── Fidelidad ─────────────────────────────
+
+enum LoyaltyEventType {
+  SELLO
+  PREMIO_MEDIO
+  PREMIO_COMPLETO
+  AJUSTE
+}
+
+model LoyaltyCustomer {
+  id    String  @id @default(cuid())
+  /// DNI o carné de extranjería
+  dni   String  @unique
+  name  String
+  phone String?
+
+  /// Sellos del ciclo actual (0 … meta)
+  stamps        Int     @default(0)
+  /// Sellos acumulados de por vida
+  totalStamps   Int     @default(0)
+  /// Tarjetas completadas
+  cycles        Int     @default(0)
+  /// Si ya usó el premio intermedio de este ciclo
+  midRewardUsed Boolean @default(false)
+
+  active    Boolean          @default(true)
+  notes     String?
+  events    LoyaltyEvent[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([name])
+}
+
+model LoyaltyEvent {
+  id         String           @id @default(cuid())
+  customerId String
+  customer   LoyaltyCustomer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type       LoyaltyEventType
+  quantity   Int              @default(1)
+  note       String?
+  createdAt  DateTime         @default(now())
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
 // ───────────────────────────── Admin / Config ─────────────────────────────
 
 model AdminUser {
