@@ -19,7 +19,7 @@ const PILARES = [
   {
     Icon: SproutIcon,
     title: "Alta calidad y natural",
-    text: "Matcha ceremonial, café de especialidad y fruta natural. Nada de mezclas en polvo.",
+    text: "Selección de matcha, café, té e insumos naturales y de calidad.",
     tone: "bg-roa-300",
   },
   {
