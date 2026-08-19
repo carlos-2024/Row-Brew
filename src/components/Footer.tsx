@@ -8,7 +8,7 @@ import {
   PinIcon,
   ClockIcon,
 } from "@/components/Icons";
-import type { SiteSettings } from "@/lib/settings";
+import { mapsLink, type SiteSettings } from "@/lib/settings";
 
 export default function Footer({ settings }: { settings: SiteSettings }) {
   const year = new Date().getFullYear();
@@ -96,9 +96,18 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
             </ul>
 
             <ul className="mt-5 space-y-2.5 text-cream/70">
-              <li className="flex items-start gap-2.5">
-                <PinIcon className="mt-0.5 h-5 w-5 shrink-0 text-roa-300" />
-                {settings.location}
+              <li>
+                <a
+                  href={mapsLink(settings)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-start gap-2.5 transition hover:text-grape"
+                >
+                  <PinIcon className="mt-0.5 h-5 w-5 shrink-0 text-roa-300 transition group-hover:text-grape" />
+                  <span className="underline-offset-4 group-hover:underline">
+                    {settings.location}
+                  </span>
+                </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <ClockIcon className="mt-0.5 h-5 w-5 shrink-0 text-roa-300" />
@@ -118,7 +127,15 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
 
       <div className="relative border-t-2 border-cream/10 bg-roa-950">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 py-5 text-sm text-cream/45 sm:flex-row">
-          <p>© {year} {settings.brandName}. Todos los derechos reservados.</p>
+          <div className="text-center sm:text-left">
+            <p>
+              {/* La razón social suele acabar en punto (E.I.R.L.), así que no
+                  se le agrega otro. */}
+              © {year} {settings.legalName.replace(/\.$/, "")}. Todos los derechos
+              reservados.
+            </p>
+            <p className="mt-0.5 text-cream/35">RUC {settings.ruc}</p>
+          </div>
           <p className="flex items-center gap-2">
             <KodaMark className="h-5 w-5 text-roa-400" />
             Hecho con matcha y mucho café frío.

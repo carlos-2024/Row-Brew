@@ -6,12 +6,18 @@ import Marquee from "@/components/Marquee";
 import type { SiteSettings } from "@/lib/settings";
 
 const TICKER = [
-  "MATCHA CEREMONIAL",
-  "COLD BREW 18HRS",
-  "POPPING BOBA",
-  "SIN AZÚCAR SI QUIERES",
   "HECHO A MANO",
-  "LOS OLIVOS · LIMA",
+  "SIN AZÚCARES SI QUIERES",
+  "MATCHA JAPONÉS",
+  "COLD BREW 18 HRS",
+];
+
+const DATOS = [
+  ["Matcha", "japonés"],
+  ["Café", "peruano"],
+  ["4", "familias de bebidas"],
+  ["Promos", "vigentes · Matcha · Sparkling · Café"],
+  ["100%", "natural & calidad"],
 ];
 
 export default function Hero({ settings }: { settings: SiteSettings }) {
@@ -32,18 +38,21 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
             {settings.heroKicker}
           </p>
 
-          <h1 className="mt-3 font-display text-[clamp(3rem,9.5vw,7rem)] leading-[0.86] text-cream">
-            Bebidas que se
-            <br />
-            <span className="relative inline-block">
-              <span className="relative z-10">ven tan bien</span>
-              <span
-                aria-hidden
-                className="absolute inset-x-0 bottom-1 z-0 h-[0.32em] -rotate-1 rounded-full bg-grape/80"
-              />
+          <h1 className="mt-3 font-display text-cream">
+            <span className="block text-[clamp(2.9rem,8.5vw,6.2rem)] leading-[0.86]">
+              Bebidas
+              <br />
+              <span className="relative inline-block">
+                <span className="relative z-10">de autor</span>
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 bottom-1 z-0 h-[0.32em] -rotate-1 rounded-full bg-grape/80"
+                />
+              </span>
             </span>
-            <br />
-            como saben
+            <span className="mt-3 block max-w-xl text-[clamp(1.35rem,3.4vw,2.3rem)] leading-[1.08] text-cream/85">
+              pensadas para disfrutar y compartir
+            </span>
           </h1>
 
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-cream/90">
@@ -67,15 +76,11 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
             </a>
           </div>
 
-          <dl className="mt-12 flex flex-wrap gap-x-10 gap-y-5">
-            {[
-              ["18h+", "de extracción en frío"],
-              ["4", "familias de bebidas"],
-              ["2x20", "en promos activas"],
-            ].map(([n, label]) => (
-              <div key={label}>
-                <dt className="font-display text-4xl text-cream">{n}</dt>
-                <dd className="mt-0.5 text-sm text-cream/75">{label}</dd>
+          <dl className="mt-9 flex flex-wrap gap-x-7 gap-y-4">
+            {DATOS.map(([n, label]) => (
+              <div key={label} className="max-w-[11rem]">
+                <dt className="font-display text-2xl leading-none text-cream">{n}</dt>
+                <dd className="mt-1 text-xs leading-snug text-cream/70">{label}</dd>
               </div>
             ))}
           </dl>
@@ -122,10 +127,11 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
           {/* Sello giratorio */}
           <div className="absolute -bottom-2 right-0 grid h-24 w-24 place-items-center rounded-full border-2 border-ink bg-cream text-center sm:h-28 sm:w-28">
             <span className="font-display text-xs leading-tight text-ink">
-              100%
+              Los
               <br />
-              natural
-              <br />& fresco
+              Olivos
+              <br />
+              Lima
             </span>
           </div>
         </div>

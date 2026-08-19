@@ -4,15 +4,18 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   brandName: "Roa Brew",
   tagline: "Té · Matcha · Cold Brew",
   heroKicker: "hola brew brew",
-  heroTitle: "Bebidas artesanales que se ven tan bien como saben",
-  heroSubtitle:
-    "Matcha ceremonial, café de especialidad extraído en frío y té con popping boba. Hechos a mano en Los Olivos, Lima.",
+  heroTitle: "Bebidas de autor, pensadas para disfrutar y compartir",
+  heroSubtitle: "Matcha, Café y Té seleccionados con intención.",
   whatsapp: "51933948864",
   whatsappDisplay: "933 948 864",
   instagram: "roabrew",
   tiktok: "roabrew",
   location: "Los Olivos — Lima, Perú",
+  /** Enlace exacto de Google Maps. Vacío: se arma una búsqueda con `location`. */
+  mapsUrl: "",
   schedule: "Mar a Dom · 3:00 pm — 10:00 pm",
+  legalName: "ROA BREW E.I.R.L.",
+  ruc: "20615866688",
   currency: "S/",
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
@@ -35,6 +38,18 @@ export async function getSettings(): Promise<SiteSettings> {
   } catch {
     return { ...DEFAULT_SETTINGS };
   }
+}
+
+/**
+ * Enlace al mapa. Si hay una URL configurada se respeta tal cual; si no, se
+ * arma una búsqueda de Google Maps con la dirección escrita en Ajustes.
+ */
+export function mapsLink(settings: SiteSettings): string {
+  const custom = settings.mapsUrl?.trim();
+  if (custom) return custom;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${settings.brandName} ${settings.location}`
+  )}`;
 }
 
 export function whatsappLink(phone: string, message?: string): string {

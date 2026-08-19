@@ -114,6 +114,17 @@ export default async function AjustesPage() {
                   className={inputClass}
                 />
               </Field>
+              <Field
+                label="Enlace de Google Maps"
+                hint="Déjalo vacío y se busca la ubicación de arriba. Pega aquí el enlace exacto de tu ficha para que abra el local justo."
+              >
+                <input
+                  name="mapsUrl"
+                  defaultValue={settings.mapsUrl}
+                  placeholder="https://maps.app.goo.gl/…"
+                  className={inputClass}
+                />
+              </Field>
               <Field label="Horario">
                 <input
                   name="schedule"
@@ -121,6 +132,23 @@ export default async function AjustesPage() {
                   className={inputClass}
                 />
               </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Razón social">
+                  <input
+                    name="legalName"
+                    defaultValue={settings.legalName}
+                    className={inputClass}
+                  />
+                </Field>
+                <Field label="RUC">
+                  <input
+                    name="ruc"
+                    defaultValue={settings.ruc}
+                    inputMode="numeric"
+                    className={inputClass}
+                  />
+                </Field>
+              </div>
               <div className="grid grid-cols-[6rem_1fr] gap-3">
                 <Field label="Moneda">
                   <input

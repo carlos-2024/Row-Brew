@@ -8,7 +8,7 @@ import {
   PinIcon,
   ClockIcon,
 } from "@/components/Icons";
-import type { SiteSettings } from "@/lib/settings";
+import { mapsLink, type SiteSettings } from "@/lib/settings";
 
 export default function Contacto({ settings }: { settings: SiteSettings }) {
   const wa = `https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`;
@@ -91,9 +91,14 @@ export default function Contacto({ settings }: { settings: SiteSettings }) {
 
         <Reveal delay={480}>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-cream/65">
-            <span className="flex items-center gap-2">
+            <a
+              href={mapsLink(settings)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 underline-offset-4 transition hover:text-cream hover:underline"
+            >
               <PinIcon className="h-5 w-5 text-roa-200" /> {settings.location}
-            </span>
+            </a>
             <span className="flex items-center gap-2">
               <ClockIcon className="h-5 w-5 text-roa-200" /> {settings.schedule}
             </span>
