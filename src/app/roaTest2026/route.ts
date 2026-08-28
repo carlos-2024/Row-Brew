@@ -10,11 +10,16 @@ export const dynamic = "force-dynamic";
  *   /roaTest2026?salir=1  → la cierra y devuelve a la pantalla de espera
  */
 export async function GET(request: Request) {
-  const url = new URL(request.url);
-  const salir = url.searchParams.has("salir");
+  const salir = new URL(request.url).searchParams.has("salir");
 
-  const destino = new URL(salir ? "/proximamente" : "/", url.origin);
-  const res = NextResponse.redirect(destino);
+  // Location relativo a propósito. Detrás del proxy de EasyPanel, request.url
+  // trae la dirección interna del contenedor (0.0.0.0:80), así que construir
+  // una URL absoluta desde ahí mandaba al visitante a https://0.0.0.0:80/.
+  // Una ruta relativa la resuelve el navegador contra el dominio real.
+  const res = new NextResponse(null, {
+    status: 307,
+    headers: { Location: salir ? "/proximamente" : "/" },
+  });
 
   if (salir) {
     res.cookies.delete(PREVIEW_COOKIE);
