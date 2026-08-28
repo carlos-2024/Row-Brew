@@ -392,6 +392,10 @@ const SETTINGS: Record<string, string> = {
   brandName: "Roa Brew",
   tagline: "Té · Matcha · Cold Brew",
   heroKicker: "hola brew brew",
+  launchDate: "2026-09-18T18:00:00-05:00",
+  launchTitle: "¡Hola brew brew!",
+  launchSubtitle:
+    "Nuestra web está siendo filtrada con mucha paciencia, como nuestro café, y preparada minuciosamente, como nuestro matcha.",
   heroTitle: "Bebidas de autor, pensadas para disfrutar y compartir",
   heroSubtitle: "Matcha, Café y Té seleccionados con intención.",
   whatsapp: "51933948864",

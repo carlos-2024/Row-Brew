@@ -4,6 +4,12 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   brandName: "Roa Brew",
   tagline: "Té · Matcha · Cold Brew",
   heroKicker: "hola brew brew",
+
+  /** Fecha y hora del lanzamiento, para la cuenta regresiva. Zona de Lima. */
+  launchDate: "2026-09-18T18:00:00-05:00",
+  launchTitle: "¡Hola brew brew!",
+  launchSubtitle:
+    "Nuestra web está siendo filtrada con mucha paciencia, como nuestro café, y preparada minuciosamente, como nuestro matcha.",
   heroTitle: "Bebidas de autor, pensadas para disfrutar y compartir",
   heroSubtitle: "Matcha, Café y Té seleccionados con intención.",
   whatsapp: "51933948864",
@@ -19,6 +25,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   currency: "S/",
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
+
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 };

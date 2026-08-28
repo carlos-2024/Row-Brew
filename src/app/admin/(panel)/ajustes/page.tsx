@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { toNumber } from "@/lib/format";
 import { saveSettings, saveExtra, deleteExtra } from "@/app/admin/actions";
@@ -170,6 +170,60 @@ export default async function AjustesPage() {
           </Panel>
         </form>
       </div>
+
+      {/* Modo lanzamiento */}
+      <form action={saveSettings} className="mt-6">
+        <Panel title="Pantalla de lanzamiento">
+          <p className="mb-5 text-sm text-cream/45">
+            Mientras el modo lanzamiento está encendido, el público solo ve la cuenta
+            regresiva. El equipo entra por{" "}
+            <code className="rounded bg-cream/10 px-1.5 py-0.5 text-roa-300">
+              /roaTest2026
+            </code>{" "}
+            y queda con acceso 30 días. Para salir de la vista previa:{" "}
+            <code className="rounded bg-cream/10 px-1.5 py-0.5 text-roa-300">
+              /roaTest2026?salir=1
+            </code>
+            .
+          </p>
+          <p className="mb-5 rounded-xl border-2 border-mango/40 bg-mango/10 px-4 py-3 text-sm text-mango">
+            El interruptor de encendido no está acá: es la variable de entorno{" "}
+            <strong>COMING_SOON</strong> en EasyPanel. Ponla en{" "}
+            <strong>true</strong> para activarlo y quítala el día del lanzamiento.
+            Va por variable porque el portero corre antes que la base de datos.
+          </p>
+
+          <div className="space-y-4">
+            <Field
+              label="Fecha y hora del lanzamiento"
+              hint="Formato ISO con zona horaria. -05:00 es la hora de Lima."
+            >
+              <input
+                name="launchDate"
+                defaultValue={settings.launchDate}
+                placeholder="2026-09-18T18:00:00-05:00"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Titular">
+              <input
+                name="launchTitle"
+                defaultValue={settings.launchTitle}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Texto de apoyo">
+              <textarea
+                name="launchSubtitle"
+                rows={3}
+                defaultValue={settings.launchSubtitle}
+                className={`${inputClass} resize-none`}
+              />
+            </Field>
+            <Button variant="primary">Guardar lanzamiento</Button>
+          </div>
+        </Panel>
+      </form>
 
       {/* Extras */}
       <Panel title="Extras de la carta" className="mt-6">
