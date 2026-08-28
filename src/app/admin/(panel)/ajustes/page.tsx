@@ -171,6 +171,140 @@ export default async function AjustesPage() {
         </form>
       </div>
 
+      {/* Modo lanzamiento */}
+      <form action={saveSettings} className="mt-6">
+        <Panel title="Pantalla de lanzamiento">
+          <p className="mb-5 text-sm text-cream/45">
+            Mientras el modo lanzamiento está encendido, el público solo ve la cuenta
+            regresiva. El equipo entra por{" "}
+            <code className="rounded bg-cream/10 px-1.5 py-0.5 text-roa-300">
+              /roaTest2026
+            </code>{" "}
+            y queda con acceso 30 días. Para salir de la vista previa:{" "}
+            <code className="rounded bg-cream/10 px-1.5 py-0.5 text-roa-300">
+              /roaTest2026?salir=1
+            </code>
+            .
+          </p>
+          <p className="mb-5 rounded-xl border-2 border-mango/40 bg-mango/10 px-4 py-3 text-sm text-mango">
+            El interruptor de encendido no está acá: es la variable de entorno{" "}
+            <strong>COMING_SOON</strong> en EasyPanel. Ponla en{" "}
+            <strong>true</strong> para activarlo y quítala el día del lanzamiento.
+            Va por variable porque el portero corre antes que la base de datos.
+          </p>
+
+          <div className="space-y-4">
+            <Field
+              label="Fecha y hora del lanzamiento"
+              hint="Formato ISO con zona horaria. -05:00 es la hora de Lima."
+            >
+              <input
+                name="launchDate"
+                defaultValue={settings.launchDate}
+                placeholder="2026-09-18T18:00:00-05:00"
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Titular">
+              <input
+                name="launchTitle"
+                defaultValue={settings.launchTitle}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Texto de apoyo">
+              <textarea
+                name="launchSubtitle"
+                rows={3}
+                defaultValue={settings.launchSubtitle}
+                className={`${inputClass} resize-none`}
+              />
+            </Field>
+            <Button variant="primary">Guardar lanzamiento</Button>
+          </div>
+        </Panel>
+      </form>
+
+      {/* Zonas de delivery */}
+      <form action={saveSettings} className="mt-6">
+        <Panel title="Zonas de delivery">
+          <p className="mb-5 text-sm text-cream/45">
+            El mapa se incrusta desde Google My Maps: cuando edites las zonas allá,
+            el sitio se actualiza solo. Para que se vea, el mapa debe estar
+            compartido como <strong>“Cualquier persona con el enlace”</strong>.
+          </p>
+
+          <div className="space-y-4">
+            <Field
+              label="Enlace del mapa de cobertura"
+              hint="Pega el enlace tal cual te lo da Google. Déjalo vacío para ocultar la sección."
+            >
+              <input
+                name="deliveryMapUrl"
+                defaultValue={settings.deliveryMapUrl}
+                placeholder="https://www.google.com/maps/d/…?mid=…"
+                className={inputClass}
+              />
+            </Field>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              {[
+                {
+                  color: "bg-mango",
+                  labelName: "deliveryZoneFreeLabel",
+                  textName: "deliveryZoneFreeText",
+                  labelValue: settings.deliveryZoneFreeLabel,
+                  textValue: settings.deliveryZoneFreeText,
+                },
+                {
+                  color: "bg-grape",
+                  labelName: "deliveryZonePaidLabel",
+                  textName: "deliveryZonePaidText",
+                  labelValue: settings.deliveryZonePaidLabel,
+                  textValue: settings.deliveryZonePaidText,
+                },
+                {
+                  color: "bg-cream",
+                  labelName: "deliveryZoneOutsideLabel",
+                  textName: "deliveryZoneOutsideText",
+                  labelValue: settings.deliveryZoneOutsideLabel,
+                  textValue: settings.deliveryZoneOutsideText,
+                },
+              ].map((z) => (
+                <div
+                  key={z.labelName}
+                  className="rounded-2xl border-2 border-cream/10 bg-roa-950 p-4"
+                >
+                  <span
+                    className={`mb-3 block h-5 w-5 rounded-md border-2 border-ink ${z.color}`}
+                    aria-hidden
+                  />
+                  <Field label="Nombre de la zona">
+                    <input
+                      name={z.labelName}
+                      defaultValue={z.labelValue}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <div className="mt-3">
+                    <Field label="Descripción">
+                      <textarea
+                        name={z.textName}
+                        rows={3}
+                        defaultValue={z.textValue}
+                        className={`${inputClass} resize-none`}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button variant="primary">Guardar zonas</Button>
+          </div>
+        </Panel>
+      </form>
+
       {/* Extras */}
       <Panel title="Extras de la carta" className="mt-6">
         <p className="mb-5 text-sm text-cream/45">

@@ -392,6 +392,10 @@ const SETTINGS: Record<string, string> = {
   brandName: "Roa Brew",
   tagline: "Té · Matcha · Cold Brew",
   heroKicker: "hola brew brew",
+  launchDate: "2026-09-18T18:00:00-05:00",
+  launchTitle: "Estamos preparando algo rico",
+  launchSubtitle:
+    "Nuestra web está en el horno. Muy pronto vas a poder ver la carta completa y pedir desde acá.",
   heroTitle: "Bebidas de autor, pensadas para disfrutar y compartir",
   heroSubtitle: "Matcha, Café y Té seleccionados con intención.",
   whatsapp: "51933948864",
@@ -406,6 +410,14 @@ const SETTINGS: Record<string, string> = {
   currency: "S/",
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
+  deliveryMapUrl: "",
+  deliveryZoneFreeLabel: "Zona naranja",
+  deliveryZoneFreeText: "Delivery gratis. Sin monto mínimo.",
+  deliveryZonePaidLabel: "Zona morada",
+  deliveryZonePaidText: "Delivery con costo de S/ 5.",
+  deliveryZoneOutsideLabel: "Fuera de zona",
+  deliveryZoneOutsideText:
+    "También te atendemos: coordinamos el envío por Yango o InDrive y tú asumes la tarifa de la app.",
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 };
