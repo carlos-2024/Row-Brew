@@ -49,17 +49,15 @@ export default async function ProximamentePage() {
       <div className="relative flex flex-1 flex-col items-center justify-center px-5 py-16 text-center">
         <Logo className="text-[clamp(28px,6vw,42px)]" tone="cream" />
 
-        <p className="mt-8 flex items-center gap-3 font-hand text-[clamp(2rem,6vw,3.2rem)] leading-none text-cream/90">
-          <Sparkle className="h-6 w-6 animate-spin-slow text-mango" />
-          hola brew brew
-          <Sparkle className="h-6 w-6 animate-spin-slow text-mango" />
-        </p>
-
-        <h1 className="mt-3 max-w-4xl font-display text-[clamp(2.4rem,8vw,5.5rem)] leading-[0.88] text-cream">
+        {/* El saludo es el titular: va en la manuscrita, que es la voz
+            cercana de la marca. */}
+        <h1 className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 font-hand text-[clamp(3rem,11vw,6.5rem)] leading-[0.95] text-cream">
+          <Sparkle className="h-7 w-7 shrink-0 animate-spin-slow text-mango sm:h-9 sm:w-9" />
           {settings.launchTitle}
+          <Sparkle className="h-7 w-7 shrink-0 animate-spin-slow text-mango sm:h-9 sm:w-9" />
         </h1>
 
-        <p className="mt-5 max-w-lg text-lg leading-relaxed text-cream/85">
+        <p className="mt-6 max-w-2xl text-[clamp(1.05rem,2.5vw,1.45rem)] leading-relaxed text-cream/85">
           {settings.launchSubtitle}
         </p>
 

@@ -7,9 +7,9 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
 
   /** Fecha y hora del lanzamiento, para la cuenta regresiva. Zona de Lima. */
   launchDate: "2026-09-18T18:00:00-05:00",
-  launchTitle: "Estamos preparando algo rico",
+  launchTitle: "¡Hola brew brew!",
   launchSubtitle:
-    "Nuestra web está en el horno. Muy pronto vas a poder ver la carta completa y pedir desde acá.",
+    "Nuestra web está siendo filtrada con mucha paciencia, como nuestro café, y preparada minuciosamente, como nuestro matcha.",
   heroTitle: "Bebidas de autor, pensadas para disfrutar y compartir",
   heroSubtitle: "Matcha, Café y Té seleccionados con intención.",
   whatsapp: "51933948864",
