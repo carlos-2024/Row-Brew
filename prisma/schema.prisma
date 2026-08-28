@@ -182,6 +182,29 @@ model LoyaltyEvent {
   @@index([createdAt])
 }
 
+// ───────────────────────────── Visitas ─────────────────────────────
+
+model Visit {
+  id String @id @default(cuid())
+
+  /// Identificador anónimo del navegador, guardado en una cookie propia.
+  /// No se registra IP ni user agent: con esto basta para contar personas
+  /// distintas y evita guardar datos personales.
+  visitorId String
+  path      String
+  referrer  String?
+
+  /// true si venía con la cookie de vista previa: son visitas del equipo y
+  /// se excluyen de las métricas para no inflar los números.
+  team Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([visitorId])
+  @@index([path])
+}
+
 // ───────────────────────────── Admin / Config ─────────────────────────────
 
 model AdminUser {
