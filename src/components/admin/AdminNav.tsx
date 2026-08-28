@@ -14,10 +14,12 @@ import {
   ExternalIcon,
   PowerIcon,
   PawIcon,
+  EyeIcon,
 } from "@/components/Icons";
 
 const LINKS = [
   { href: "/admin", label: "Resumen", Icon: ChartIcon, exact: true },
+  { href: "/admin/visitas", label: "Visitas", Icon: EyeIcon },
   { href: "/admin/pedidos", label: "Pedidos", Icon: ReceiptIcon },
   { href: "/admin/productos", label: "Productos", Icon: BobaIcon },
   { href: "/admin/categorias", label: "Categorías", Icon: FolderIcon },

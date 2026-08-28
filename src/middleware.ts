@@ -10,7 +10,10 @@ function siempreAbierta(pathname: string): boolean {
     pathname === "/proximamente" ||
     pathname === PREVIEW_PATH ||
     pathname.startsWith("/admin") ||
-    pathname.startsWith("/api/auth")
+    pathname.startsWith("/api/auth") ||
+    // El contador tiene que funcionar sobre todo en modo lanzamiento: es
+    // cuando interesa saber cuánta gente llega
+    pathname === "/api/visita"
   );
 }
 
