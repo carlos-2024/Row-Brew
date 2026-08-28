@@ -4,7 +4,6 @@ import Familias from "@/components/sections/Familias";
 import Promos from "@/components/sections/Promos";
 import Destacados from "@/components/sections/Destacados";
 import Experiencia from "@/components/sections/Experiencia";
-import Cobertura from "@/components/sections/Cobertura";
 import Contacto from "@/components/sections/Contacto";
 import { getSettings } from "@/lib/settings";
 import { getExtras, getFeatured, getMenu, getPromos } from "@/lib/menu";
@@ -29,7 +28,6 @@ export default async function HomePage() {
       <Promos promos={promos} currency={settings.currency} />
       <Destacados products={featured} extras={extras} currency={settings.currency} />
       <Experiencia note={settings.eventsNote} />
-      <Cobertura settings={settings} />
       <Contacto settings={settings} />
     </>
   );

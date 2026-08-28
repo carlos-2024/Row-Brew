@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+﻿import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { toNumber } from "@/lib/format";
 import { saveSettings, saveExtra, deleteExtra } from "@/app/admin/actions";
@@ -221,86 +221,6 @@ export default async function AjustesPage() {
               />
             </Field>
             <Button variant="primary">Guardar lanzamiento</Button>
-          </div>
-        </Panel>
-      </form>
-
-      {/* Zonas de delivery */}
-      <form action={saveSettings} className="mt-6">
-        <Panel title="Zonas de delivery">
-          <p className="mb-5 text-sm text-cream/45">
-            El mapa se incrusta desde Google My Maps: cuando edites las zonas allá,
-            el sitio se actualiza solo. Para que se vea, el mapa debe estar
-            compartido como <strong>“Cualquier persona con el enlace”</strong>.
-          </p>
-
-          <div className="space-y-4">
-            <Field
-              label="Enlace del mapa de cobertura"
-              hint="Pega el enlace tal cual te lo da Google. Déjalo vacío para ocultar la sección."
-            >
-              <input
-                name="deliveryMapUrl"
-                defaultValue={settings.deliveryMapUrl}
-                placeholder="https://www.google.com/maps/d/…?mid=…"
-                className={inputClass}
-              />
-            </Field>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              {[
-                {
-                  color: "bg-mango",
-                  labelName: "deliveryZoneFreeLabel",
-                  textName: "deliveryZoneFreeText",
-                  labelValue: settings.deliveryZoneFreeLabel,
-                  textValue: settings.deliveryZoneFreeText,
-                },
-                {
-                  color: "bg-grape",
-                  labelName: "deliveryZonePaidLabel",
-                  textName: "deliveryZonePaidText",
-                  labelValue: settings.deliveryZonePaidLabel,
-                  textValue: settings.deliveryZonePaidText,
-                },
-                {
-                  color: "bg-cream",
-                  labelName: "deliveryZoneOutsideLabel",
-                  textName: "deliveryZoneOutsideText",
-                  labelValue: settings.deliveryZoneOutsideLabel,
-                  textValue: settings.deliveryZoneOutsideText,
-                },
-              ].map((z) => (
-                <div
-                  key={z.labelName}
-                  className="rounded-2xl border-2 border-cream/10 bg-roa-950 p-4"
-                >
-                  <span
-                    className={`mb-3 block h-5 w-5 rounded-md border-2 border-ink ${z.color}`}
-                    aria-hidden
-                  />
-                  <Field label="Nombre de la zona">
-                    <input
-                      name={z.labelName}
-                      defaultValue={z.labelValue}
-                      className={inputClass}
-                    />
-                  </Field>
-                  <div className="mt-3">
-                    <Field label="Descripción">
-                      <textarea
-                        name={z.textName}
-                        rows={3}
-                        defaultValue={z.textValue}
-                        className={`${inputClass} resize-none`}
-                      />
-                    </Field>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <Button variant="primary">Guardar zonas</Button>
           </div>
         </Panel>
       </form>

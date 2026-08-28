@@ -36,7 +36,6 @@ export default function Footer({ settings }: { settings: SiteSettings }) {
                 { href: "/carta", label: "Carta completa" },
                 { href: "/#promos", label: "Promos 2x" },
                 { href: "/fidelidad", label: "Tarjeta de fidelidad" },
-                { href: "/#delivery", label: "Zonas de delivery" },
                 { href: "/#experiencia", label: "Eventos y Pop Up" },
                 { href: "/#contacto", label: "Contacto" },
                 { href: "/admin", label: "Panel interno" },

@@ -410,14 +410,6 @@ const SETTINGS: Record<string, string> = {
   currency: "S/",
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
-  deliveryMapUrl: "",
-  deliveryZoneFreeLabel: "Zona naranja",
-  deliveryZoneFreeText: "Delivery gratis. Sin monto mínimo.",
-  deliveryZonePaidLabel: "Zona morada",
-  deliveryZonePaidText: "Delivery con costo de S/ 5.",
-  deliveryZoneOutsideLabel: "Fuera de zona",
-  deliveryZoneOutsideText:
-    "También te atendemos: coordinamos el envío por Yango o InDrive y tú asumes la tarifa de la app.",
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 };

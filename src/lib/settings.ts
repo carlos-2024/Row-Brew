@@ -26,17 +26,6 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
 
-  /** Mapa de zonas de cobertura (Google My Maps). Se acepta cualquier enlace
-   *  del mapa: se extrae el identificador automáticamente. */
-  deliveryMapUrl:
-    "https://www.google.com/maps/d/u/0/viewer?mid=1OWnhQiA5dF75Cmwam3DXfF-ODf6nzJU&ll=-11.99511072509182%2C-77.07136581581635&z=13",
-  deliveryZoneFreeLabel: "Zona naranja",
-  deliveryZoneFreeText: "Delivery gratis. Sin monto mínimo.",
-  deliveryZonePaidLabel: "Zona morada",
-  deliveryZonePaidText: "Delivery con costo de S/ 5.",
-  deliveryZoneOutsideLabel: "Fuera de zona",
-  deliveryZoneOutsideText:
-    "También te atendemos: coordinamos el envío por Yango o InDrive y tú asumes la tarifa de la app.",
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 };
@@ -68,29 +57,6 @@ export function mapsLink(settings: SiteSettings): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${settings.brandName} ${settings.location}`
   )}`;
-}
-
-/**
- * Convierte cualquier enlace de Google My Maps en su versión incrustable.
- * Acepta tanto el enlace del visor como uno ya de tipo embed: lo único que
- * importa es el parámetro `mid`. Devuelve null si no hay mapa configurado.
- */
-export function deliveryMapEmbedUrl(settings: SiteSettings): string | null {
-  const raw = settings.deliveryMapUrl?.trim();
-  if (!raw) return null;
-
-  const mid = /[?&]mid=([^&]+)/.exec(raw)?.[1];
-  if (!mid) return null;
-
-  // Se conserva el encuadre (centro y zoom) si venía en el enlace original
-  const ll = /[?&]ll=([^&]+)/.exec(raw)?.[1];
-  const z = /[?&]z=([^&]+)/.exec(raw)?.[1];
-
-  const params = new URLSearchParams({ mid });
-  if (ll) params.set("ll", decodeURIComponent(ll));
-  if (z) params.set("z", z);
-
-  return `https://www.google.com/maps/d/embed?${params.toString()}`;
 }
 
 export function whatsappLink(phone: string, message?: string): string {
