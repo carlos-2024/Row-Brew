@@ -53,7 +53,11 @@ export async function middleware(request: NextRequest) {
           { status: 503 }
         );
       }
-      return NextResponse.redirect(new URL("/proximamente", request.url));
+      // nextUrl, no request.url: Next lo reconstruye con el dominio público
+      const url = request.nextUrl.clone();
+      url.pathname = "/proximamente";
+      url.search = "";
+      return NextResponse.redirect(url);
     }
   }
 
