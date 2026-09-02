@@ -65,6 +65,17 @@ export default async function AjustesPage() {
                   className={`${inputClass} resize-none`}
                 />
               </Field>
+              <Field
+                label="Tipos de evento"
+                hint="Opciones del desplegable del formulario, separadas por coma."
+              >
+                <textarea
+                  name="eventTypes"
+                  rows={2}
+                  defaultValue={settings.eventTypes}
+                  className={`${inputClass} resize-none`}
+                />
+              </Field>
               <Button variant="primary">Guardar marca</Button>
             </div>
           </Panel>
@@ -122,6 +133,17 @@ export default async function AjustesPage() {
                   name="mapsUrl"
                   defaultValue={settings.mapsUrl}
                   placeholder="https://maps.app.goo.gl/…"
+                  className={inputClass}
+                />
+              </Field>
+              <Field
+                label="Enlace de Waze"
+                hint="Igual que el de Maps: vacío y se busca por la ubicación."
+              >
+                <input
+                  name="wazeUrl"
+                  defaultValue={settings.wazeUrl}
+                  placeholder="https://waze.com/ul/…"
                   className={inputClass}
                 />
               </Field>

@@ -175,6 +175,36 @@ export default async function PedidosPage({
                       <dd>{order.address}</dd>
                     </div>
                   )}
+                  {order.deliveryZone && (
+                    <div className="flex gap-2">
+                      <dt className="font-bold text-cream/40">Zona:</dt>
+                      <dd
+                        className={
+                          order.deliveryZone === "gratis"
+                            ? "text-mango"
+                            : order.deliveryZone === "costo"
+                              ? "text-grape"
+                              : "text-berry"
+                        }
+                      >
+                        {order.deliveryZone === "gratis"
+                          ? "Envío gratis"
+                          : order.deliveryZone === "costo"
+                            ? `Envío ${money(order.deliveryFee, settings.currency)}`
+                            : "Fuera de zona — coordinar con driver"}
+                      </dd>
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <dt className="font-bold text-cream/40">Comprobante:</dt>
+                    <dd>
+                      {order.docType === "FACTURA"
+                        ? `Factura · RUC ${order.docNumber} · ${order.businessName}`
+                        : order.docType === "BOLETA_DNI"
+                          ? `Boleta con DNI ${order.docNumber}`
+                          : "Boleta simple"}
+                    </dd>
+                  </div>
                   {order.scheduledFor && (
                     <div className="flex gap-2">
                       <dt className="font-bold text-cream/40">Para:</dt>

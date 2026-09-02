@@ -38,6 +38,57 @@ async function respetarRitmo() {
   lastCall = Date.now();
 }
 
+/**
+ * Varias sugerencias para el buscador predictivo del carrito.
+ *
+ * A diferencia de `geocode`, que devuelve la mejor coincidencia, aquí se
+ * ofrecen opciones para que el cliente elija la suya: es la forma de obtener
+ * coordenadas exactas sin depender de que escriba la dirección perfecta.
+ */
+export async function suggest(query: string, limit = 5): Promise<GeocodeHit[]> {
+  const q = query.trim();
+  if (q.length < 4) return [];
+
+  const full = /lima|per[uú]/i.test(q) ? q : `${q}, Lima, Perú`;
+
+  const params = new URLSearchParams({
+    q: full,
+    format: "jsonv2",
+    limit: String(Math.min(limit, 8)),
+    countrycodes: "pe",
+    viewbox: LIMA_VIEWBOX,
+    addressdetails: "1",
+    "accept-language": "es",
+  });
+
+  try {
+    await respetarRitmo();
+
+    const res = await fetch(`${ENDPOINT}?${params}`, {
+      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as {
+      lat: string;
+      lon: string;
+      display_name: string;
+      place_rank?: number;
+      address?: { house_number?: string };
+    }[];
+
+    return data.map((d) => ({
+      lat: Number(d.lat),
+      lng: Number(d.lon),
+      label: d.display_name,
+      precise: Boolean(d.address?.house_number) || (d.place_rank ?? 0) >= 30,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function geocode(address: string): Promise<GeocodeHit | null> {
   const query = address.trim().toLowerCase();
   if (query.length < 4) return null;
@@ -94,5 +145,112 @@ export async function geocode(address: string): Promise<GeocodeHit | null> {
     return hit;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Autocompletado en vivo con Photon (OpenStreetMap).
+ *
+ * Nominatim limita a una consulta por segundo, lo que obliga a esperar entre
+ * pulsaciones y se siente lento. Photon está pensado justamente para escribir
+ * y ver resultados al vuelo. Si falla, se cae a Nominatim para no quedarse sin
+ * sugerencias.
+ */
+const PHOTON = "https://photon.komoot.io/api/";
+
+/** Centro aproximado de Lima, para que priorice resultados cercanos. */
+const LIMA_LAT = -12.05;
+const LIMA_LNG = -77.05;
+
+/**
+ * Recuadro de Lima y Callao (minLon,minLat,maxLon,maxLat).
+ *
+ * El sesgo por coordenadas ordena pero no descarta: sin esto, escribir
+ * "jr huan" traía calles de Huánuco y Huancavelica. Como solo se reparte en
+ * Lima, acotar aquí deja la lista limpia.
+ */
+const LIMA_BBOX = "-77.30,-12.55,-76.60,-11.50";
+
+type PhotonFeature = {
+  geometry: { coordinates: [number, number] };
+  properties: {
+    name?: string;
+    street?: string;
+    housenumber?: string;
+    locality?: string;
+    district?: string;
+    city?: string;
+    county?: string;
+    state?: string;
+    countrycode?: string;
+  };
+};
+
+/** Arma una dirección legible con las partes que Photon devuelve sueltas. */
+function etiquetaPhoton(p: PhotonFeature["properties"]): string {
+  const calle = [p.street ?? p.name, p.housenumber].filter(Boolean).join(" ");
+  const zona = [p.locality, p.district, p.city ?? p.county, p.state].filter(Boolean);
+  // Se quitan repetidos: Photon suele repetir el distrito en city
+  const unicos = [...new Set(zona)];
+  return [calle || p.name, ...unicos].filter(Boolean).join(", ");
+}
+
+export async function suggestFast(query: string, limit = 5): Promise<GeocodeHit[]> {
+  const q = query.trim();
+  if (q.length < 3) return [];
+
+  const params = new URLSearchParams({
+    q,
+    // Se piden de más porque una misma calle llega partida en varios tramos
+    // y al unificarlos quedan menos de los que se van a mostrar
+    limit: String(Math.min(limit * 4, 30)),
+    // Photon solo acepta default, de, en y fr: con "es" responde un error
+    lang: "default",
+    lat: String(LIMA_LAT),
+    lon: String(LIMA_LNG),
+    bbox: LIMA_BBOX,
+  });
+
+  try {
+    const res = await fetch(`${PHOTON}?${params}`, {
+      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) throw new Error("photon no disponible");
+
+    const data = (await res.json()) as { features?: PhotonFeature[] };
+
+    // OSM parte una avenida larga en muchos tramos y Photon devuelve uno por
+    // tramo, así que la misma dirección aparecería repetida. Se deja el primero
+    // de cada etiqueta, que es además el que Photon consideró más relevante.
+    const vistos = new Set<string>();
+    const hits: GeocodeHit[] = [];
+
+    for (const f of data.features ?? []) {
+      // Solo Perú: el sesgo por coordenadas no lo garantiza
+      if (f.properties.countrycode && f.properties.countrycode !== "PE") continue;
+
+      const label = etiquetaPhoton(f.properties);
+      if (!label) continue;
+
+      const clave = label.toLowerCase();
+      if (vistos.has(clave)) continue;
+      vistos.add(clave);
+
+      hits.push({
+        lat: f.geometry.coordinates[1],
+        lng: f.geometry.coordinates[0],
+        label,
+        precise: Boolean(f.properties.housenumber),
+      });
+
+      if (hits.length >= limit) break;
+    }
+
+    if (hits.length > 0) return hits;
+    throw new Error("sin resultados");
+  } catch {
+    // Respaldo: más lento, pero mejor que dejar al cliente sin sugerencias
+    return suggest(q, limit);
   }
 }
