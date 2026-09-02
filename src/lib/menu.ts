@@ -11,13 +11,17 @@ export async function getMenu(): Promise<MenuCategory[]> {
       orderBy: { position: "asc" },
       include: {
         products: {
-          where: { active: true },
+          // Los productos de marcas aliadas se venden desde su propia
+          // sección, no desde la carta
+          where: { active: true, allyId: null },
           orderBy: [{ position: "asc" }, { name: "asc" }],
         },
       },
     });
 
-    return categories.map((c) => ({
+    return categories
+      .filter((c) => c.products.length > 0)
+      .map((c) => ({
       id: c.id,
       name: c.name,
       slug: c.slug,
@@ -39,7 +43,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
         categorySlug: c.slug,
         categoryName: c.name,
       })),
-    }));
+      }));
   } catch {
     return [];
   }
@@ -56,18 +60,58 @@ export async function getPromos(): Promise<PromoView[]> {
     const promos = await prisma.promo.findMany({
       where: { active: true },
       orderBy: { position: "asc" },
-      include: { category: { select: { slug: true } } },
+      include: {
+        category: {
+          select: {
+            slug: true,
+            name: true,
+            // Solo las bebidas que de verdad entran en la promo. Se traen
+            // únicamente para las promos que el carrito cobra solas: son las
+            // únicas donde tiene sentido ofrecer armar el combo.
+            products: {
+              where: { active: true, allyId: null, promoEligible: true },
+              orderBy: [{ position: "asc" }, { name: "asc" }],
+            },
+          },
+        },
+      },
     });
-    return promos.map((p) => ({
-      id: p.id,
-      title: p.title,
-      label: p.label,
-      detail: p.detail,
-      price: toNumber(p.price),
-      theme: p.theme,
-      imageUrl: p.imageUrl,
-      categorySlug: p.category?.slug ?? null,
-    }));
+
+    return promos.map((p) => {
+      // Se saca a una constante para que TypeScript pueda estrecharla dentro
+      // del map de abajo
+      const cat = p.category;
+
+      return {
+        id: p.id,
+        title: p.title,
+        label: p.label,
+        detail: p.detail,
+        price: toNumber(p.price),
+        quantity: p.quantity,
+        autoApply: p.autoApply,
+        theme: p.theme,
+        imageUrl: p.imageUrl,
+        categorySlug: cat?.slug ?? null,
+        products:
+          p.autoApply && cat
+            ? cat.products.map((prod) => ({
+                id: prod.id,
+                name: prod.name,
+                slug: prod.slug,
+                description: prod.description,
+                price: toNumber(prod.price),
+                imageUrl: prod.imageUrl,
+                badge: prod.badge,
+                size: prod.size,
+                featured: prod.featured,
+                promoEligible: prod.promoEligible,
+                categorySlug: cat.slug,
+                categoryName: cat.name,
+              }))
+            : [],
+      };
+    });
   } catch {
     return [];
   }

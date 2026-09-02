@@ -15,15 +15,19 @@ import {
   PowerIcon,
   PawIcon,
   EyeIcon,
+  HandshakeIcon,
+  CalendarIcon,
 } from "@/components/Icons";
 
 const LINKS = [
   { href: "/admin", label: "Resumen", Icon: ChartIcon, exact: true },
   { href: "/admin/visitas", label: "Visitas", Icon: EyeIcon },
   { href: "/admin/pedidos", label: "Pedidos", Icon: ReceiptIcon },
+  { href: "/admin/eventos", label: "Eventos", Icon: CalendarIcon },
   { href: "/admin/productos", label: "Productos", Icon: BobaIcon },
   { href: "/admin/categorias", label: "Categorías", Icon: FolderIcon },
   { href: "/admin/promos", label: "Promos", Icon: TagIcon },
+  { href: "/admin/aliados", label: "Aliados", Icon: HandshakeIcon },
   { href: "/admin/fidelidad", label: "Fidelidad", Icon: PawIcon },
   { href: "/admin/ajustes", label: "Ajustes", Icon: GearIcon },
 ];
