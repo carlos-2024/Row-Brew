@@ -388,6 +388,27 @@ const EXTRAS = [
   { name: "Shot extra de cold brew", price: 3 },
 ];
 
+const ALIADOS = [
+  {
+    name: "Matcha Kaori",
+    tagline: "Matcha ceremonial de Shizuoka, Japón",
+    storyTitle: "Desde la Prefectura de Shizuoka hasta tu taza",
+    story: `Nuestro Matcha Kaori es cultivado en Haruno, Shizuoka, una de las regiones más prestigiosas de Japón para la producción de té verde. Aquí, los maestros del té siguen técnicas ancestrales que garantizan un matcha de máxima pureza, trazabilidad y calidad ceremonial.
+
+Cada hoja es cultivada con esmero, protegida del sol para potenciar sus antioxidantes y luego molida lentamente en molinos de piedra hasta obtener un polvo ultra fino. Este meticuloso proceso preserva sus propiedades nutricionales y asegura una experiencia sensorial única en cada taza.`,
+  },
+  {
+    name: "Beliá Café",
+    tagline: "Café orgánico de San Ignacio, Cajamarca",
+    storyTitle: "¿Quiénes somos?",
+    story: `Beliá lleva el nombre de mi madre, quien es caficultora desde hace más de 18 años, y la marca representa un homenaje hacia ella y toda su historia de lucha y resiliencia.
+
+Somos una marca familiar y productora. Nuestro café es orgánico, cosechado a mano de forma artesanal, cultivado por ella con pasión y esfuerzo, cuidando siempre el entorno natural de nuestro medio ambiente.
+
+Nos encontramos en medio de los bosques de San Ignacio, Cajamarca, en un caserío llamado Mora Chica.`,
+  },
+];
+
 const SETTINGS: Record<string, string> = {
   brandName: "Roa Brew",
   tagline: "Té · Matcha · Cold Brew",
@@ -404,12 +425,21 @@ const SETTINGS: Record<string, string> = {
   tiktok: "roabrew",
   location: "Los Olivos — Lima, Perú",
   mapsUrl: "",
+  wazeUrl: "",
+  deliveryMapUrl: "",
+  deliveryFeePaid: "5",
+  deliveryTextFree: "¡Tu zona tiene delivery gratis!",
+  deliveryTextPaid: "Llegamos a tu zona con un costo de envío.",
+  deliveryTextOutside:
+    "Estás fuera de nuestras zonas, pero igual te atendemos: el envío lo gestiona un driver y te avisamos el costo antes de preparar tu pedido.",
   schedule: "Mar a Dom · 3:00 pm — 10:00 pm",
   legalName: "ROA BREW E.I.R.L.",
   ruc: "20615866688",
   currency: "S/",
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
+  eventTypes:
+    "Cumpleaños, Corporativo, Feria o activación, Matrimonio, Baby shower, Otro",
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 };
@@ -530,6 +560,17 @@ async function main() {
     if (!existing) await prisma.promo.create({ data });
   }
   console.log(`🏷️  ${PROMOS.length} promos cargadas`);
+
+  // ── Aliados ────────────────────────────────────────────
+  for (const [i, aliado] of ALIADOS.entries()) {
+    const slug = slugify(aliado.name);
+    await prisma.ally.upsert({
+      where: { slug },
+      update: {}, // nunca se pisa lo editado desde el panel
+      create: { ...aliado, slug, position: i },
+    });
+  }
+  console.log(`🤝 ${ALIADOS.length} aliados cargados`);
 
   console.log("\n✅ Listo. Entra a /admin con las credenciales de arriba.\n");
 }

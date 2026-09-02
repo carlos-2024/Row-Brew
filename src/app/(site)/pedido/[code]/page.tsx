@@ -128,24 +128,33 @@ export default async function PedidoPage({
             </div>
           </dl>
 
-          {toNumber(order.subtotal) > toNumber(order.total) && (
-            <div className="space-y-1 border-t-2 border-dashed border-ink/20 px-6 py-4 text-sm">
-              <div className="flex justify-between text-ink/55">
-                <span>Subtotal</span>
-                <span>{money(toNumber(order.subtotal), settings.currency)}</span>
+          {(() => {
+            const sub = toNumber(order.subtotal);
+            const envio = toNumber(order.deliveryFee);
+            const descuento = sub + envio - toNumber(order.total);
+            if (descuento <= 0 && envio <= 0) return null;
+
+            return (
+              <div className="space-y-1 border-t-2 border-dashed border-ink/20 px-6 py-4 text-sm">
+                <div className="flex justify-between text-ink/55">
+                  <span>Subtotal</span>
+                  <span>{money(sub, settings.currency)}</span>
+                </div>
+                {descuento > 0 && (
+                  <div className="flex justify-between font-bold text-roa-600">
+                    <span>Descuento por promociones</span>
+                    <span>−{money(descuento, settings.currency)}</span>
+                  </div>
+                )}
+                {envio > 0 && (
+                  <div className="flex justify-between font-bold text-ink/70">
+                    <span>Envío</span>
+                    <span>{money(envio, settings.currency)}</span>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between font-bold text-roa-600">
-                <span>Descuento por promociones</span>
-                <span>
-                  −
-                  {money(
-                    toNumber(order.subtotal) - toNumber(order.total),
-                    settings.currency
-                  )}
-                </span>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div className="flex items-baseline justify-between bg-ink px-6 py-5 text-cream">
             <span className="font-hand text-3xl text-roa-300">total</span>

@@ -19,6 +19,19 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   location: "Los Olivos — Lima, Perú",
   /** Enlace exacto de Google Maps. Vacío: se arma una búsqueda con `location`. */
   mapsUrl: "",
+  /** Enlace de Waze. Vacío: se arma una búsqueda con `location`. */
+  wazeUrl: "",
+
+  /** Mapa de zonas de cobertura (Google My Maps). De ahí se leen los
+   *  polígonos con los que el carrito decide el costo del envío. */
+  deliveryMapUrl:
+    "https://www.google.com/maps/d/u/0/viewer?mid=1OWnhQiA5dF75Cmwam3DXfF-ODf6nzJU&ll=-11.99511072509182%2C-77.07136581581635&z=13",
+  /** Costo del envío cuando la dirección cae en la zona con cargo */
+  deliveryFeePaid: "5",
+  deliveryTextFree: "¡Tu zona tiene delivery gratis!",
+  deliveryTextPaid: "Llegamos a tu zona con un costo de envío.",
+  deliveryTextOutside:
+    "Estás fuera de nuestras zonas, pero igual te atendemos: el envío lo gestiona un driver y te avisamos el costo antes de preparar tu pedido.",
   schedule: "Mar a Dom · 3:00 pm — 10:00 pm",
   legalName: "ROA BREW E.I.R.L.",
   ruc: "20615866688",
@@ -26,6 +39,9 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   deliveryNote:
     "Delivery por Yango / InDrive coordinado por WhatsApp. Recojo en nuestro Pop Up House.",
 
+  /** Opciones del desplegable del formulario de eventos, separadas por coma. */
+  eventTypes:
+    "Cumpleaños, Corporativo, Feria o activación, Matrimonio, Baby shower, Otro",
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 };
@@ -57,6 +73,15 @@ export function mapsLink(settings: SiteSettings): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${settings.brandName} ${settings.location}`
   )}`;
+}
+
+/** Enlace de navegación en Waze, con el mismo criterio que el de Maps. */
+export function wazeLink(settings: SiteSettings): string {
+  const custom = settings.wazeUrl?.trim();
+  if (custom) return custom;
+  return `https://waze.com/ul?q=${encodeURIComponent(
+    `${settings.brandName} ${settings.location}`
+  )}&navigate=yes`;
 }
 
 export function whatsappLink(phone: string, message?: string): string {

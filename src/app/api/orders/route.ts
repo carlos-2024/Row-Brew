@@ -4,6 +4,9 @@ import { orderCode, toNumber } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
 import { getAutoPromos } from "@/lib/menu";
 import { priceCart, type PriceableItem } from "@/lib/pricing";
+import { classify, getZones } from "@/lib/coverage";
+import { eventCode, toUtcDate, todayUtc } from "@/lib/events";
+import type { DocType } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +21,16 @@ type Body = {
   phone?: string;
   deliveryType?: string;
   address?: string;
+  lat?: number;
+  lng?: number;
   scheduledFor?: string;
   notes?: string;
+  docType?: string;
+  docNumber?: string;
+  businessName?: string;
+  email?: string;
+  eventDate?: string;
+  eventType?: string;
   items?: IncomingItem[];
 };
 
@@ -27,6 +38,18 @@ const DELIVERY_TEXT: Record<string, string> = {
   recojo: "Recojo en el Pop Up",
   delivery: "Delivery",
   evento: "Evento / corporativo",
+};
+
+const DOC_TEXT: Record<string, string> = {
+  BOLETA: "Boleta simple",
+  BOLETA_DNI: "Boleta con DNI",
+  FACTURA: "Factura",
+};
+
+const ZONA_TEXT: Record<string, string> = {
+  gratis: "Zona con delivery gratis",
+  costo: "Zona con costo de envío",
+  fuera: "Fuera de zona: el envío lo gestiona un driver y se avisa el costo antes",
 };
 
 export async function POST(request: Request) {
@@ -42,6 +65,15 @@ export async function POST(request: Request) {
   const deliveryType = body.deliveryType ?? "recojo";
   const items = body.items ?? [];
 
+  const docType = (
+    ["BOLETA", "BOLETA_DNI", "FACTURA"].includes(body.docType ?? "")
+      ? body.docType
+      : "BOLETA"
+  ) as DocType;
+  const docNumber = (body.docNumber ?? "").replace(/\D/g, "");
+  const businessName = (body.businessName ?? "").trim();
+
+  // ── Validaciones ──────────────────────────────────────────
   if (!customerName || phone.replace(/\D/g, "").length < 6) {
     return NextResponse.json(
       { error: "Necesitamos tu nombre y un número de contacto válido." },
@@ -53,13 +85,43 @@ export async function POST(request: Request) {
   }
   if (deliveryType === "delivery" && !(body.address ?? "").trim()) {
     return NextResponse.json(
-      { error: "Para delivery necesitamos la dirección." },
+      { error: "Elige tu dirección para calcular el envío." },
       { status: 400 }
     );
   }
+  if (docType === "BOLETA_DNI" && docNumber.length !== 8) {
+    return NextResponse.json({ error: "El DNI debe tener 8 dígitos." }, { status: 400 });
+  }
+  if (docType === "FACTURA") {
+    if (docNumber.length !== 11) {
+      return NextResponse.json({ error: "El RUC debe tener 11 dígitos." }, { status: 400 });
+    }
+    if (!businessName) {
+      return NextResponse.json(
+        { error: "Ingresa la razón social para la factura." },
+        { status: 400 }
+      );
+    }
+  }
+
+  const eventDate = toUtcDate(body.eventDate ?? "");
+  const email = (body.email ?? "").trim();
+  if (deliveryType === "evento") {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      return NextResponse.json(
+        { error: "Para eventos necesitamos un correo válido." },
+        { status: 400 }
+      );
+    }
+    if (!eventDate || eventDate < todayUtc()) {
+      return NextResponse.json(
+        { error: "Elige una fecha de evento válida." },
+        { status: 400 }
+      );
+    }
+  }
 
   try {
-    // Los precios SIEMPRE se recalculan aquí; nunca se confía en el cliente.
     const productIds = [...new Set(items.map((i) => i.productId))];
     const [products, dbExtras, settings, promos] = await Promise.all([
       prisma.product.findMany({
@@ -123,10 +185,49 @@ export async function POST(request: Request) {
       );
     }
 
-    // Las promociones se calculan acá, con las reglas de la base. Lo que el
-    // navegador haya mostrado es solo informativo.
     const pricing = priceCart(priceable, promos);
+
+    // ── Zona de envío: se recalcula acá, no se acepta la del navegador ──
+    let deliveryZone: string | null = null;
+    let deliveryFee = 0;
+
+    if (deliveryType === "delivery") {
+      // Ojo con null: Number(null) es 0, y (0,0) es un punto perfectamente
+      // válido que caería siempre "fuera de zona" sin que nadie lo note
+      const lat = body.lat == null ? NaN : Number(body.lat);
+      const lng = body.lng == null ? NaN : Number(body.lng);
+
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        const zones = await getZones(settings.deliveryMapUrl);
+        if (zones.length > 0) {
+          deliveryZone = classify(lat, lng, zones).status;
+          if (deliveryZone === "costo") {
+            deliveryFee = toNumber(settings.deliveryFeePaid) || 0;
+          }
+        }
+      }
+    }
+
+    const total = pricing.total + deliveryFee;
+    const cur = settings.currency;
     const code = orderCode();
+
+    // Un pedido para evento también entra a la bandeja de cotizaciones
+    let eventRequestId: string | null = null;
+    if (deliveryType === "evento" && eventDate) {
+      const solicitud = await prisma.eventRequest.create({
+        data: {
+          code: eventCode(),
+          name: customerName,
+          email,
+          phone,
+          eventDate,
+          eventType: (body.eventType ?? "").trim() || "Sin especificar",
+          notes: `Pedido ${code} desde el carrito. ${(body.notes ?? "").trim()}`.trim(),
+        },
+      });
+      eventRequestId = solicitud.id;
+    }
 
     const order = await prisma.order.create({
       data: {
@@ -135,18 +236,24 @@ export async function POST(request: Request) {
         phone,
         deliveryType,
         address: (body.address ?? "").trim() || null,
+        lat: Number.isFinite(Number(body.lat)) ? Number(body.lat) : null,
+        lng: Number.isFinite(Number(body.lng)) ? Number(body.lng) : null,
         scheduledFor: (body.scheduledFor ?? "").trim() || null,
         notes: (body.notes ?? "").trim() || null,
+        docType,
+        docNumber: docNumber || null,
+        businessName: businessName || null,
+        deliveryZone,
+        deliveryFee,
+        eventRequestId,
         subtotal: pricing.subtotal,
-        total: pricing.total,
+        total,
         items: {
-          create: lines.map(({ extrasLabel: _extrasLabel, ...line }) => line),
+          create: lines.map(({ extrasLabel: _e, ...line }) => line),
         },
       },
     });
 
-    // Mensaje listo para pegar en WhatsApp
-    const cur = settings.currency;
     const message = [
       `¡Hola Roa Brew! 🧋 Quiero hacer un pedido.`,
       ``,
@@ -154,7 +261,18 @@ export async function POST(request: Request) {
       `*Nombre:* ${customerName}`,
       `*Entrega:* ${DELIVERY_TEXT[deliveryType] ?? deliveryType}`,
       body.address?.trim() ? `*Dirección:* ${body.address.trim()}` : null,
+      deliveryZone ? `*Zona:* ${ZONA_TEXT[deliveryZone]}` : null,
       body.scheduledFor?.trim() ? `*Para:* ${body.scheduledFor.trim()}` : null,
+      deliveryType === "evento" && eventDate
+        ? `*Fecha del evento:* ${eventDate.toISOString().slice(0, 10)}`
+        : null,
+      deliveryType === "evento" ? `*Tipo de evento:* ${body.eventType ?? ""}` : null,
+      deliveryType === "evento" ? `*Correo:* ${email}` : null,
+      ``,
+      `*Comprobante:* ${DOC_TEXT[docType]}`,
+      docType === "BOLETA_DNI" ? `*DNI:* ${docNumber}` : null,
+      docType === "FACTURA" ? `*RUC:* ${docNumber}` : null,
+      docType === "FACTURA" ? `*Razón social:* ${businessName}` : null,
       ``,
       `*Mi pedido:*`,
       ...lines.map(
@@ -171,8 +289,9 @@ export async function POST(request: Request) {
             ),
           ]
         : []),
+      deliveryFee > 0 ? `Envío: ${cur} ${deliveryFee.toFixed(2)}` : null,
       ``,
-      `*Total: ${cur} ${pricing.total.toFixed(2)}*`,
+      `*Total: ${cur} ${total.toFixed(2)}*`,
       body.notes?.trim() ? `` : null,
       body.notes?.trim() ? `*Notas:* ${body.notes.trim()}` : null,
     ]
@@ -181,8 +300,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       code: order.code,
-      total: pricing.total,
+      total,
       discount: pricing.discount,
+      deliveryFee,
+      deliveryZone,
       message,
     });
   } catch (error) {

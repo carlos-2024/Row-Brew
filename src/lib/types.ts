@@ -24,6 +24,37 @@ export type MenuCategory = {
   products: MenuProduct[];
 };
 
+export type AllyImageView = {
+  id: string;
+  url: string;
+  caption: string | null;
+};
+
+/** Lo mínimo para la tarjeta del inicio. */
+export type AllySummary = {
+  id: string;
+  name: string;
+  slug: string;
+  tagline: string | null;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  /** Productos activos de la marca, para anunciarlo en la tarjeta */
+  productCount: number;
+};
+
+export type AllyView = {
+  id: string;
+  name: string;
+  slug: string;
+  tagline: string | null;
+  storyTitle: string | null;
+  story: string | null;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  images: AllyImageView[];
+  products: MenuProduct[];
+};
+
 export type MenuExtra = {
   id: string;
   name: string;
@@ -36,9 +67,15 @@ export type PromoView = {
   label: string;
   detail: string | null;
   price: number;
+  /** Cuántas bebidas entran en el combo */
+  quantity: number;
+  /** Si el carrito la cobra sola: solo entonces se ofrece armarla */
+  autoApply: boolean;
   theme: string;
   imageUrl: string | null;
   categorySlug: string | null;
+  /** Bebidas entre las que puede elegir el cliente. Vacío si no es armable. */
+  products: MenuProduct[];
 };
 
 export type CartExtra = { name: string; price: number };

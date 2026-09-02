@@ -92,6 +92,41 @@ export function ColdBrewIcon({ className = "" }: IconProps) {
   );
 }
 
+/** Calendario — solicitudes de eventos */
+export function CalendarIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <rect x="3.2" y="5.2" width="17.6" height="15.6" rx="2.4" />
+      <path d="M3.2 10h17.6M8.2 3v4.4M15.8 3v4.4" />
+      <circle cx="8.5" cy="14.2" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="14.2" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="14.2" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Flecha de navegación — para el enlace de Waze */
+export function NavigationIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="M21 3 3.5 10.4a.6.6 0 0 0 .05 1.12L11 14l2.5 7.45a.6.6 0 0 0 1.12.05L21 3Z" />
+    </svg>
+  );
+}
+
+/** Apretón de manos — aliados */
+export function HandshakeIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="m11 6.5 1-.9a2.4 2.4 0 0 1 3.3.1L20 10.2" />
+      <path d="M4 10.4 8.4 6a2.4 2.4 0 0 1 3.3 0l2.6 2.5a1.5 1.5 0 0 1-2.1 2.1l-1.4-1.3" />
+      <path d="m14 12.4 2.3 2.2M11.6 14.3l2.3 2.2M9.2 16.2l1.8 1.7" />
+      <path d="M3 9.6 1.6 11a1 1 0 0 0 0 1.4l3.4 3.4a1 1 0 0 0 1.4 0L7.6 14" />
+      <path d="M21 9.8 22.4 11a1 1 0 0 1 0 1.4L19 15.9a1 1 0 0 1-1.4 0" />
+    </svg>
+  );
+}
+
 /** Torta de cumpleaños */
 export function CakeIcon({ className = "" }: IconProps) {
   return (

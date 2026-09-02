@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, unitPrice } from "./CartProvider";
+import AddressSearch, { type Direccion } from "./AddressSearch";
 import CupArt from "@/components/CupArt";
+import Calendar from "@/components/events/Calendar";
 import {
   StoreIcon,
   ScooterIcon,
@@ -11,37 +13,94 @@ import {
   TrashIcon,
   WhatsAppIcon,
 } from "@/components/Icons";
+import { formatEventDate, toUtcDate } from "@/lib/events";
 
 type Props = {
   whatsapp: string;
   currency: string;
   deliveryNote: string;
+  eventTypes: string[];
 };
 
 type Step = "carrito" | "datos" | "enviando";
 
-const DELIVERY_OPTIONS = [
+const ENTREGA = [
   { value: "recojo", label: "Recojo en el Pop Up", Icon: StoreIcon },
   { value: "delivery", label: "Delivery", Icon: ScooterIcon },
   { value: "evento", label: "Evento", Icon: PartyIcon },
 ];
 
-export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) {
-  const { items, count, pricing, open, setOpen, setQuantity, remove, clear } = useCart();
+const COMPROBANTES = [
+  { value: "BOLETA", label: "Boleta simple", hint: "Sin datos adicionales" },
+  { value: "BOLETA_DNI", label: "Boleta con DNI", hint: "Necesitamos tu DNI" },
+  { value: "FACTURA", label: "Factura", hint: "RUC y razón social" },
+];
+
+const INPUT =
+  "w-full rounded-xl border-2 border-ink/15 bg-white/70 px-4 py-3 text-ink outline-none transition placeholder:text-ink/30 focus:border-roa-500";
+
+export default function CartDrawer({
+  whatsapp,
+  currency,
+  deliveryNote,
+  eventTypes,
+}: Props) {
+  const { items, count, pricing, open, setOpen, setQuantity, remove, clear } =
+    useCart();
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("carrito");
   const [error, setError] = useState<string | null>(null);
+  const [direccion, setDireccion] = useState<Direccion | null>(null);
+  const [blocked, setBlocked] = useState<string[]>([]);
+
   const [form, setForm] = useState({
     customerName: "",
     phone: "",
     deliveryType: "recojo",
-    address: "",
     scheduledFor: "",
     notes: "",
+    docType: "BOLETA",
+    docNumber: "",
+    businessName: "",
+    email: "",
+    eventDate: "",
+    eventType: eventTypes[0] ?? "",
   });
 
+  const esDelivery = form.deliveryType === "delivery";
+  const esEvento = form.deliveryType === "evento";
+
+  // Las fechas ocupadas solo hacen falta si el pedido es para un evento
+  useEffect(() => {
+    if (!esEvento || blocked.length > 0) return;
+    fetch("/api/eventos")
+      .then((r) => r.json())
+      .then((d) => setBlocked(d.blocked ?? []))
+      .catch(() => setBlocked([]));
+  }, [esEvento, blocked.length]);
+
+  const envio = esDelivery ? (direccion?.fee ?? 0) : 0;
+  const totalFinal = pricing.total + envio;
+
   const money = (n: number) => `${currency} ${n.toFixed(2)}`;
+
+  function reiniciar() {
+    setForm({
+      customerName: "",
+      phone: "",
+      deliveryType: "recojo",
+      scheduledFor: "",
+      notes: "",
+      docType: "BOLETA",
+      docNumber: "",
+      businessName: "",
+      email: "",
+      eventDate: "",
+      eventType: eventTypes[0] ?? "",
+    });
+    setDireccion(null);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,9 +110,33 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
       setError("Necesitamos tu nombre y un número de contacto válido.");
       return;
     }
-    if (form.deliveryType === "delivery" && !form.address.trim()) {
-      setError("Para delivery necesitamos la dirección.");
+    if (esDelivery && !direccion) {
+      setError("Indica tu dirección de entrega para calcular el envío.");
       return;
+    }
+    if (form.docType === "BOLETA_DNI" && form.docNumber.replace(/\D/g, "").length !== 8) {
+      setError("El DNI debe tener 8 dígitos.");
+      return;
+    }
+    if (form.docType === "FACTURA") {
+      if (form.docNumber.replace(/\D/g, "").length !== 11) {
+        setError("El RUC debe tener 11 dígitos.");
+        return;
+      }
+      if (!form.businessName.trim()) {
+        setError("Ingresa la razón social para la factura.");
+        return;
+      }
+    }
+    if (esEvento) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
+        setError("Para eventos necesitamos un correo válido.");
+        return;
+      }
+      if (!form.eventDate) {
+        setError("Elige la fecha de tu evento.");
+        return;
+      }
     }
 
     setStep("enviando");
@@ -63,6 +146,9 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          address: direccion?.label ?? "",
+          lat: direccion?.lat ?? undefined,
+          lng: direccion?.lng ?? undefined,
           items: items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
@@ -74,23 +160,16 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "No pudimos registrar el pedido.");
 
-      // Abrimos WhatsApp con el pedido ya escrito
-      const wa = `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
-        data.message
-      )}`;
-      window.open(wa, "_blank", "noopener");
+      window.open(
+        `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(data.message)}`,
+        "_blank",
+        "noopener"
+      );
 
       clear();
       setOpen(false);
       setStep("carrito");
-      setForm({
-        customerName: "",
-        phone: "",
-        deliveryType: "recojo",
-        address: "",
-        scheduledFor: "",
-        notes: "",
-      });
+      reiniciar();
       router.push(`/pedido/${data.code}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Algo salió mal. Intenta de nuevo.");
@@ -100,7 +179,6 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
 
   return (
     <>
-      {/* Fondo */}
       <div
         onClick={() => setOpen(false)}
         className={`fixed inset-0 z-50 bg-roa-950/80 backdrop-blur-sm transition-opacity duration-300 ${
@@ -117,7 +195,6 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Cabecera */}
         <header className="relative flex items-center justify-between gap-3 border-b-2 border-ink bg-roa-500 px-5 py-4 text-cream">
           <div>
             <p className="font-hand text-xl leading-none text-roa-100">tu pedido</p>
@@ -134,7 +211,6 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
           </button>
         </header>
 
-        {/* Contenido */}
         <div className="flex-1 overflow-y-auto px-5 py-5">
           {items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
@@ -220,8 +296,8 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
             </ul>
           ) : (
             /* ── Paso 2: datos ── */
-            <form id="checkout-form" onSubmit={submit} className="space-y-4">
-              <Field label="¿Cómo te llamas?">
+            <form id="checkout-form" onSubmit={submit} className="space-y-5">
+              <Campo label="¿Cómo te llamas?">
                 <input
                   required
                   value={form.customerName}
@@ -229,9 +305,9 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
                   placeholder="Tu nombre"
                   className={INPUT}
                 />
-              </Field>
+              </Campo>
 
-              <Field label="WhatsApp / celular">
+              <Campo label="WhatsApp / celular">
                 <input
                   required
                   inputMode="tel"
@@ -240,11 +316,11 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
                   placeholder="999 999 999"
                   className={INPUT}
                 />
-              </Field>
+              </Campo>
 
-              <Field label="¿Cómo lo recibes?">
+              <Campo label="¿Cómo lo recibes?">
                 <div className="grid grid-cols-3 gap-2">
-                  {DELIVERY_OPTIONS.map((opt) => (
+                  {ENTREGA.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
@@ -260,30 +336,161 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
                     </button>
                   ))}
                 </div>
-              </Field>
+              </Campo>
 
-              {form.deliveryType === "delivery" && (
-                <Field label="Dirección">
-                  <input
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="Av. ... , Los Olivos"
-                    className={INPUT}
+              {/* Delivery */}
+              {esDelivery && (
+                <Campo label="¿A dónde te lo llevamos?">
+                  <AddressSearch
+                    value={direccion}
+                    onChange={setDireccion}
+                    currency={currency}
                   />
-                  <p className="mt-1 text-xs text-ink/50">{deliveryNote}</p>
-                </Field>
+                  <p className="mt-2 text-xs text-ink/45">{deliveryNote}</p>
+                </Campo>
               )}
 
-              <Field label="¿Para cuándo? (opcional)">
-                <input
-                  value={form.scheduledFor}
-                  onChange={(e) => setForm({ ...form, scheduledFor: e.target.value })}
-                  placeholder="Hoy 7pm / Sábado 4pm"
-                  className={INPUT}
-                />
-              </Field>
+              {/* Evento */}
+              {esEvento && (
+                <div className="space-y-4 rounded-2xl border-2 border-grape bg-grape/10 p-4">
+                  <p className="font-display text-lg leading-none text-ink">
+                    Datos de tu evento
+                  </p>
 
-              <Field label="Notas (opcional)">
+                  <Campo label="Correo">
+                    <input
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="tucorreo@ejemplo.com"
+                      className={INPUT}
+                    />
+                  </Campo>
+
+                  <Campo label="Tipo de evento">
+                    <select
+                      value={form.eventType}
+                      onChange={(e) => setForm({ ...form, eventType: e.target.value })}
+                      className={INPUT}
+                    >
+                      {eventTypes.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </Campo>
+
+                  <Campo label="Fecha del evento">
+                    <Calendar
+                      blocked={blocked}
+                      value={form.eventDate}
+                      onSelect={(iso) => setForm({ ...form, eventDate: iso })}
+                    />
+                    {form.eventDate && (
+                      <p className="mt-2 rounded-xl border-2 border-roa-500 bg-roa-100 px-3 py-2 text-xs font-bold capitalize text-roa-700">
+                        {formatEventDate(toUtcDate(form.eventDate)!)}
+                      </p>
+                    )}
+                  </Campo>
+                </div>
+              )}
+
+              {/* Comprobante */}
+              <Campo label="¿Qué comprobante necesitas?">
+                <div className="space-y-2">
+                  {COMPROBANTES.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          docType: c.value,
+                          docNumber: "",
+                          businessName: "",
+                        })
+                      }
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${
+                        form.docType === c.value
+                          ? "border-ink bg-roa-500 text-cream"
+                          : "border-ink/15 bg-white/60 hover:border-ink/40"
+                      }`}
+                    >
+                      <span>
+                        <span className="block text-sm font-bold">{c.label}</span>
+                        <span
+                          className={`text-xs ${
+                            form.docType === c.value ? "text-cream/70" : "text-ink/45"
+                          }`}
+                        >
+                          {c.hint}
+                        </span>
+                      </span>
+                      <span
+                        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
+                          form.docType === c.value
+                            ? "border-cream bg-cream text-roa-600"
+                            : "border-ink/25"
+                        }`}
+                      >
+                        {form.docType === c.value ? "✓" : ""}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </Campo>
+
+              {form.docType === "BOLETA_DNI" && (
+                <Campo label="Tu DNI">
+                  <input
+                    inputMode="numeric"
+                    maxLength={8}
+                    value={form.docNumber}
+                    onChange={(e) => setForm({ ...form, docNumber: e.target.value })}
+                    placeholder="12345678"
+                    className={INPUT}
+                  />
+                </Campo>
+              )}
+
+              {form.docType === "FACTURA" && (
+                <>
+                  <Campo label="RUC">
+                    <input
+                      inputMode="numeric"
+                      maxLength={11}
+                      value={form.docNumber}
+                      onChange={(e) => setForm({ ...form, docNumber: e.target.value })}
+                      placeholder="20123456789"
+                      className={INPUT}
+                    />
+                  </Campo>
+                  <Campo label="Razón social">
+                    <input
+                      value={form.businessName}
+                      onChange={(e) =>
+                        setForm({ ...form, businessName: e.target.value })
+                      }
+                      placeholder="Mi Empresa S.A.C."
+                      className={INPUT}
+                    />
+                  </Campo>
+                </>
+              )}
+
+              {!esEvento && (
+                <Campo label="¿Para cuándo? (opcional)">
+                  <input
+                    value={form.scheduledFor}
+                    onChange={(e) => setForm({ ...form, scheduledFor: e.target.value })}
+                    placeholder="Hoy 7pm / Sábado 4pm"
+                    className={INPUT}
+                  />
+                </Campo>
+              )}
+
+              <Campo label="Notas (opcional)">
                 <textarea
                   rows={3}
                   value={form.notes}
@@ -291,7 +498,7 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
                   placeholder="Sin azúcar, leche sin lactosa, poco hielo…"
                   className={`${INPUT} resize-none`}
                 />
-              </Field>
+              </Campo>
 
               {error && (
                 <p className="rounded-xl border-2 border-berry bg-berry/10 px-3 py-2 text-sm font-medium text-berry">
@@ -302,10 +509,8 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
           )}
         </div>
 
-        {/* Pie */}
         {items.length > 0 && (
           <footer className="border-t-2 border-ink/12 bg-cream-2 px-5 py-4">
-            {/* Aviso: falta poco para el combo */}
             {pricing.hints.map((h) => (
               <p
                 key={h.id}
@@ -316,7 +521,7 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
               </p>
             ))}
 
-            {pricing.applied.length > 0 && (
+            {(pricing.applied.length > 0 || envio > 0) && (
               <div className="mb-3 space-y-1">
                 <div className="flex items-baseline justify-between text-sm text-ink/55">
                   <span>Subtotal</span>
@@ -334,14 +539,18 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
                     <span>−{money(p.saved)}</span>
                   </div>
                 ))}
+                {envio > 0 && (
+                  <div className="flex items-baseline justify-between text-sm font-bold text-ink/70">
+                    <span>Envío</span>
+                    <span>{money(envio)}</span>
+                  </div>
+                )}
               </div>
             )}
 
             <div className="mb-3 flex items-baseline justify-between">
               <span className="font-hand text-2xl text-roa-600">total</span>
-              <span className="font-display text-3xl text-ink">
-                {money(pricing.total)}
-              </span>
+              <span className="font-display text-3xl text-ink">{money(totalFinal)}</span>
             </div>
 
             {step === "carrito" ? (
@@ -388,10 +597,7 @@ export default function CartDrawer({ whatsapp, currency, deliveryNote }: Props) 
   );
 }
 
-const INPUT =
-  "w-full rounded-xl border-2 border-ink/15 bg-white/70 px-4 py-3 text-ink outline-none transition placeholder:text-ink/30 focus:border-roa-500 focus:bg-white";
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Campo({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-bold text-roa-700">{label}</span>

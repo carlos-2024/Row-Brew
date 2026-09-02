@@ -12,11 +12,15 @@ export default async function EditarProductoPage({
 }) {
   const { id } = await params;
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, allies] = await Promise.all([
     prisma.product.findUnique({ where: { id } }),
     prisma.category.findMany({
       orderBy: { position: "asc" },
       select: { id: true, name: true, slug: true, emoji: true },
+    }),
+    prisma.ally.findMany({
+      orderBy: { position: "asc" },
+      select: { id: true, name: true },
     }),
   ]);
 
@@ -25,7 +29,7 @@ export default async function EditarProductoPage({
   return (
     <>
       <AdminHeader kicker="catálogo" title={product.name} />
-      <ProductForm categories={categories} product={product} />
+      <ProductForm categories={categories} allies={allies} product={product} />
     </>
   );
 }

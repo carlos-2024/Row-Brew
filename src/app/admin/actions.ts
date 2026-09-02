@@ -13,6 +13,7 @@ import {
   normalizeDni,
   parseBirthday,
 } from "@/lib/loyalty";
+import { toUtcDate } from "@/lib/events";
 import type { OrderStatus } from "@prisma/client";
 
 async function requireSession() {
@@ -76,6 +77,7 @@ export async function saveProduct(formData: FormData) {
     active: bool(formData, "active"),
     position: num(formData, "position"),
     categoryId,
+    allyId: str(formData, "allyId") || null,
   };
 
   if (id) {
@@ -254,6 +256,148 @@ export async function deleteOrder(formData: FormData) {
   if (id) await prisma.order.delete({ where: { id } });
   revalidatePath("/admin/pedidos");
   revalidatePath("/admin");
+}
+
+// ─────────────────────────── Eventos ───────────────────────────
+
+const ESTADOS_EVENTO = [
+  "NUEVA",
+  "CONTACTADO",
+  "COTIZADO",
+  "CONFIRMADO",
+  "CERRADO",
+  "DESCARTADO",
+] as const;
+
+export async function updateEventRequest(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const status = str(formData, "status") as (typeof ESTADOS_EVENTO)[number];
+  if (!id || !ESTADOS_EVENTO.includes(status)) return;
+
+  await prisma.eventRequest.update({
+    where: { id },
+    data: { status, internalNotes: str(formData, "internalNotes") || null },
+  });
+
+  revalidatePath("/admin/eventos");
+}
+
+export async function deleteEventRequest(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (id) await prisma.eventRequest.delete({ where: { id } });
+  revalidatePath("/admin/eventos");
+}
+
+/** Marca o desmarca un día como no disponible en el calendario público. */
+export async function toggleBlockedDate(formData: FormData) {
+  await requireSession();
+
+  const date = toUtcDate(str(formData, "date"));
+  if (!date) return;
+
+  const existente = await prisma.blockedDate.findUnique({ where: { date } });
+
+  if (existente) {
+    await prisma.blockedDate.delete({ where: { id: existente.id } });
+  } else {
+    await prisma.blockedDate.create({
+      data: { date, reason: str(formData, "reason") || null },
+    });
+  }
+
+  refresh();
+}
+
+// ─────────────────────────── Aliados ───────────────────────────
+
+export async function saveAlly(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const name = str(formData, "name");
+  if (!name) throw new Error("El nombre es obligatorio.");
+
+  const data = {
+    name,
+    tagline: str(formData, "tagline") || null,
+    storyTitle: str(formData, "storyTitle") || null,
+    story: str(formData, "story") || null,
+    logoUrl: str(formData, "logoUrl") || null,
+    coverUrl: str(formData, "coverUrl") || null,
+    position: num(formData, "position"),
+    active: bool(formData, "active"),
+  };
+
+  if (id) {
+    await prisma.ally.update({ where: { id }, data });
+  } else {
+    await prisma.ally.create({
+      data: { ...data, slug: await uniqueAllySlug(name) },
+    });
+  }
+
+  refresh();
+}
+
+async function uniqueAllySlug(base: string): Promise<string> {
+  const root = slugify(base) || "aliado";
+  let slug = root;
+  let i = 2;
+  for (;;) {
+    const found = await prisma.ally.findUnique({ where: { slug } });
+    if (!found) return slug;
+    slug = `${root}-${i++}`;
+  }
+}
+
+export async function deleteAlly(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (!id) return;
+
+  const productos = await prisma.product.count({ where: { allyId: id } });
+  if (productos > 0) {
+    throw new Error(
+      `Este aliado tiene ${productos} producto(s). Reasígnalos o elimínalos primero.`
+    );
+  }
+
+  await prisma.ally.delete({ where: { id } });
+  refresh();
+}
+
+export async function addAllyImage(formData: FormData) {
+  await requireSession();
+
+  const allyId = str(formData, "allyId");
+  const url = str(formData, "url");
+  if (!allyId || !url) return;
+
+  const ultima = await prisma.allyImage.findFirst({
+    where: { allyId },
+    orderBy: { position: "desc" },
+  });
+
+  await prisma.allyImage.create({
+    data: {
+      allyId,
+      url,
+      caption: str(formData, "caption") || null,
+      position: (ultima?.position ?? -1) + 1,
+    },
+  });
+
+  refresh();
+}
+
+export async function deleteAllyImage(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (id) await prisma.allyImage.delete({ where: { id } });
+  refresh();
 }
 
 // ─────────────────────────── Fidelidad ───────────────────────────

@@ -43,11 +43,18 @@ model Product {
   position    Int         @default(0)
   categoryId  String
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  /// Si viene de una marca aliada. Estos productos NO salen en la carta:
+  /// se muestran solo en la sección de aliados, aunque se compran igual.
+  allyId String?
+  ally   Ally?   @relation(fields: [allyId], references: [id], onDelete: SetNull)
+
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   @@index([categoryId])
+  @@index([allyId])
 }
 
 model Extra {
@@ -80,6 +87,44 @@ model Promo {
   updatedAt  DateTime  @updatedAt
 }
 
+// ───────────────────────────── Aliados ─────────────────────────────
+
+/// Marcas aliadas: su historia, su galería y los productos que vendemos.
+model Ally {
+  id      String  @id @default(cuid())
+  name    String
+  slug    String  @unique
+  /// Texto de la tarjeta del inicio, también se usa bajo el nombre en su página
+  tagline String?
+  /// Imagen de la tarjeta del inicio
+  coverUrl String?
+  /// Titular de la historia
+  storyTitle String?
+  /// Historia completa. Los saltos de línea dobles separan párrafos.
+  story   String?
+  logoUrl String?
+
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  images   AllyImage[]
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AllyImage {
+  id       String  @id @default(cuid())
+  allyId   String
+  ally     Ally    @relation(fields: [allyId], references: [id], onDelete: Cascade)
+  url      String
+  caption  String?
+  position Int     @default(0)
+
+  @@index([allyId])
+}
+
 // ───────────────────────────── Pedidos ─────────────────────────────
 
 enum OrderStatus {
@@ -88,6 +133,12 @@ enum OrderStatus {
   PREPARANDO
   ENTREGADO
   CANCELADO
+}
+
+enum DocType {
+  BOLETA
+  BOLETA_DNI
+  FACTURA
 }
 
 model Order {
@@ -100,6 +151,29 @@ model Order {
   address      String?
   scheduledFor String?
   notes        String?
+
+  /// ── Comprobante ──
+  docType      DocType @default(BOLETA)
+  /// DNI si es boleta con DNI, RUC si es factura
+  docNumber    String?
+  /// Razón social, solo para factura
+  businessName String?
+
+  /// ── Envío ──
+  /// gratis | costo | fuera, según los polígonos del mapa de cobertura
+  deliveryZone String?
+  deliveryFee  Decimal  @default(0) @db.Decimal(10, 2)
+  /// Coordenadas de la dirección elegida, para replantear la ruta si hace falta
+  lat          Float?
+  lng          Float?
+
+  /// Si el pedido es para un evento, queda unido a su solicitud de cotización.
+  /// Sin @unique a propósito: un mismo evento puede acabar con varios pedidos,
+  /// y además el índice único disparaba una alerta de pérdida de datos que
+  /// habría bloqueado el despliegue.
+  eventRequestId String?
+  eventRequest   EventRequest? @relation(fields: [eventRequestId], references: [id], onDelete: SetNull)
+
   subtotal     Decimal     @db.Decimal(10, 2)
   total        Decimal     @db.Decimal(10, 2)
   status       OrderStatus @default(PENDIENTE)
@@ -180,6 +254,53 @@ model LoyaltyEvent {
 
   @@index([customerId])
   @@index([createdAt])
+}
+
+// ───────────────────────────── Eventos ─────────────────────────────
+
+enum EventStatus {
+  NUEVA
+  CONTACTADO
+  COTIZADO
+  CONFIRMADO
+  CERRADO
+  DESCARTADO
+}
+
+/// Solicitud de cotización que llega desde el formulario del sitio.
+model EventRequest {
+  id    String @id @default(cuid())
+  code  String @unique
+  name  String
+  email String
+  phone String
+
+  /// Solo la fecha: la hora se acuerda por WhatsApp
+  eventDate DateTime    @db.Date
+  eventType String
+  notes     String?
+  status    EventStatus @default(NUEVA)
+
+  /// Notas internas del equipo, no las ve el cliente
+  internalNotes String?
+
+  /// Pedidos de bebidas asociados, si la solicitud nació desde el carrito
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventDate])
+  @@index([status])
+}
+
+/// Días que el equipo marca como no disponibles en el calendario público.
+model BlockedDate {
+  id     String   @id @default(cuid())
+  date   DateTime @unique @db.Date
+  reason String?
+
+  createdAt DateTime @default(now())
 }
 
 // ───────────────────────────── Visitas ─────────────────────────────

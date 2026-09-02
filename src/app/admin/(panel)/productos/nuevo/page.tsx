@@ -5,10 +5,16 @@ import { AdminHeader, EmptyState, LinkButton } from "@/components/admin/ui";
 export const dynamic = "force-dynamic";
 
 export default async function NuevoProductoPage() {
-  const categories = await prisma.category.findMany({
-    orderBy: { position: "asc" },
-    select: { id: true, name: true, slug: true, emoji: true },
-  });
+  const [categories, allies] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: { position: "asc" },
+      select: { id: true, name: true, slug: true, emoji: true },
+    }),
+    prisma.ally.findMany({
+      orderBy: { position: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
 
   return (
     <>
@@ -20,7 +26,7 @@ export default async function NuevoProductoPage() {
           action={<LinkButton href="/admin/categorias">Ir a categorías</LinkButton>}
         />
       ) : (
-        <ProductForm categories={categories} />
+        <ProductForm categories={categories} allies={allies} />
       )}
     </>
   );

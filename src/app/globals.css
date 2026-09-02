@@ -205,6 +205,10 @@
   .reveal.is-visible {
     opacity: 1;
     transform: none;
+    /* Se libera al terminar: will-change crea un contexto de contención que
+       atrapa a los elementos position:fixed que estén dentro, como los
+       popups. Además solo debe estar activo mientras se anima. */
+    will-change: auto;
   }
 
   /* Tarjeta con borde grueso estilo sticker */
