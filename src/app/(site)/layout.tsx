@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import { getSettings } from "@/lib/settings";
 import { getAutoPromos } from "@/lib/menu";
+import { parseEventTypes } from "@/lib/events";
 
 export default async function SiteLayout({
   children,
@@ -23,6 +24,7 @@ export default async function SiteLayout({
         whatsapp={settings.whatsapp}
         currency={settings.currency}
         deliveryNote={settings.deliveryNote}
+        eventTypes={parseEventTypes(settings.eventTypes)}
       />
     </CartProvider>
   );

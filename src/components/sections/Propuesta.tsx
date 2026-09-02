@@ -1,7 +1,16 @@
 import Reveal from "@/components/Reveal";
 import Leaf, { WaveDivider, Sparkle } from "@/components/Leaf";
 import { KodaMark } from "@/components/Logo";
-import { SlidersIcon, SproutIcon, PawIcon } from "@/components/Icons";
+import {
+  SlidersIcon,
+  SproutIcon,
+  PawIcon,
+  PinIcon,
+  NavigationIcon,
+} from "@/components/Icons";
+import { mapsLink, wazeLink, type SiteSettings } from "@/lib/settings";
+import EventQuoteModal from "@/components/events/EventQuoteModal";
+import { parseEventTypes } from "@/lib/events";
 
 const PILARES = [
   {
@@ -30,7 +39,22 @@ const PILARES = [
   },
 ];
 
-export default function Propuesta() {
+/** Tarjeta de pilar. Se comparte entre el carrusel móvil y la grilla. */
+function PilarCard({ pilar }: { pilar: (typeof PILARES)[number] }) {
+  return (
+    <article
+      className={`group h-full rounded-[2rem] border-2 border-ink ${pilar.tone} p-6 shadow-[5px_5px_0_var(--color-ink)] transition-all duration-300 hover:-translate-y-2 hover:rotate-[-1.5deg] hover:shadow-[10px_12px_0_var(--color-ink)]`}
+    >
+      <span className="inline-grid h-14 w-14 place-items-center rounded-2xl border-2 border-ink bg-cream text-ink transition-transform duration-300 group-hover:rotate-12">
+        <pilar.Icon className="h-7 w-7" />
+      </span>
+      <h3 className="mt-5 font-display text-2xl leading-tight">{pilar.title}</h3>
+      <p className="mt-2 text-sm leading-relaxed text-ink/70">{pilar.text}</p>
+    </article>
+  );
+}
+
+export default function Propuesta({ settings }: { settings: SiteSettings }) {
   return (
     <section id="propuesta" className="grain relative bg-cream py-24 text-ink">
       <WaveDivider className="absolute -top-1 left-0 h-14 w-full text-cream" flip />
@@ -50,26 +74,31 @@ export default function Propuesta() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {/* En móvil los cuatro pilares se apilaban y obligaban a scrollear
+            mucho; van en rotación infinita. Desde sm entran los cuatro a la
+            vez, así que ahí conviene la grilla. */}
+        <div className="marquee-mask -mx-5 mt-12 overflow-hidden sm:hidden">
+          <div className="marquee-track" style={{ animationDuration: "32s" }}>
+            {[...PILARES, ...PILARES].map((p, i) => (
+              <div key={i} className="w-[17rem] shrink-0 px-2.5">
+                <PilarCard pilar={p} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-14 hidden gap-5 sm:grid sm:grid-cols-2 lg:grid-cols-4">
           {PILARES.map((p, i) => (
             <Reveal key={p.title} delay={i * 90}>
-              <article
-                className={`group h-full rounded-[2rem] border-2 border-ink ${p.tone} p-6 shadow-[5px_5px_0_var(--color-ink)] transition-all duration-300 hover:-translate-y-2 hover:rotate-[-1.5deg] hover:shadow-[10px_12px_0_var(--color-ink)]`}
-              >
-                <span className="inline-grid h-14 w-14 place-items-center rounded-2xl border-2 border-ink bg-cream text-ink transition-transform duration-300 group-hover:rotate-12">
-                  <p.Icon className="h-7 w-7" />
-                </span>
-                <h3 className="mt-5 font-display text-2xl leading-tight">{p.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink/70">{p.text}</p>
-              </article>
+              <PilarCard pilar={p} />
             </Reveal>
           ))}
         </div>
 
-        {/* Bloque doble: retail + eventos */}
+        {/* Bloque doble: el local y los eventos */}
         <div className="mt-20 grid gap-5 lg:grid-cols-2">
           <Reveal>
-            <article className="relative h-full overflow-hidden rounded-[2.5rem] border-2 border-ink bg-roa-600 p-8 text-cream shadow-[6px_6px_0_var(--color-ink)] sm:p-10">
+            <article className="relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-ink bg-roa-600 p-8 text-cream shadow-[6px_6px_0_var(--color-ink)] sm:p-10">
               <KodaMark className="absolute -right-6 -top-6 h-40 w-40 text-roa-500" />
               <p className="relative font-hand text-2xl text-roa-200">01</p>
               <h3 className="relative mt-1 font-display text-4xl">Pop Up House</h3>
@@ -77,23 +106,48 @@ export default function Propuesta() {
                 Venta al por menor en nuestra casa Pop Up. Ven, elige tu bebida y mírala
                 armarse capa por capa frente a ti.
               </p>
+
+              {/* Cómo llegar: se abre la app de navegación del cliente */}
+              <div className="relative mt-auto flex flex-wrap gap-2 pt-6">
+                <a
+                  href={mapsLink(settings)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-cream px-4 py-2.5 text-sm font-bold text-ink transition hover:-translate-y-0.5 hover:bg-mango"
+                >
+                  <PinIcon className="h-4.5 w-4.5" />
+                  Google Maps
+                </a>
+                <a
+                  href={wazeLink(settings)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-cream px-4 py-2.5 text-sm font-bold text-ink transition hover:-translate-y-0.5 hover:bg-[#33CCFF]"
+                >
+                  <NavigationIcon className="h-4.5 w-4.5" />
+                  Waze
+                </a>
+              </div>
             </article>
           </Reveal>
 
           <Reveal delay={120}>
-            <article className="relative h-full overflow-hidden rounded-[2.5rem] border-2 border-ink bg-ink p-8 text-cream shadow-[6px_6px_0_var(--color-roa-500)] sm:p-10">
+            <article className="relative flex h-full flex-col overflow-hidden rounded-[2.5rem] border-2 border-ink bg-ink p-8 text-cream shadow-[6px_6px_0_var(--color-roa-500)] sm:p-10">
               <p className="font-hand text-2xl text-grape">02</p>
               <h3 className="mt-1 font-display text-4xl">Eventos y ferias</h3>
               <p className="mt-3 max-w-sm text-cream/70">
                 Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up
                 y corporativos. Barra montada, personalización según temática.
               </p>
-              <a
-                href="#contacto"
-                className="mt-6 inline-flex items-center gap-2 rounded-full border-2 border-cream px-5 py-2.5 font-bold transition hover:bg-cream hover:text-ink"
-              >
-                Cotizar mi evento <span aria-hidden>→</span>
-              </a>
+              {/* mt-auto lo empuja al fondo de la tarjeta y pt-8 garantiza el
+                  aire con el texto aunque la tarjeta sea corta */}
+              <div className="mt-auto pt-8">
+                <EventQuoteModal
+                  eventTypes={parseEventTypes(settings.eventTypes)}
+                  whatsapp={settings.whatsapp}
+                  className="inline-flex w-fit items-center gap-2 rounded-full border-2 border-cream px-5 py-2.5 font-bold transition hover:bg-cream hover:text-ink"
+                />
+              </div>
             </article>
           </Reveal>
         </div>

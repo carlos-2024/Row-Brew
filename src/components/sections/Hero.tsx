@@ -6,17 +6,16 @@ import Marquee from "@/components/Marquee";
 import type { SiteSettings } from "@/lib/settings";
 
 const TICKER = [
+  "CAFÉ DE ESPECIALIDAD",
+  "SIN AZÚCARES",
+  "COLD BREW +18HRS",
   "HECHO A MANO",
-  "SIN AZÚCARES SI QUIERES",
-  "MATCHA JAPONÉS",
-  "COLD BREW 18 HRS",
 ];
 
 const DATOS = [
   ["Matcha", "japonés"],
   ["Café", "peruano"],
-  ["4", "familias de bebidas"],
-  ["Promos", "vigentes · Matcha · Sparkling · Café"],
+  ["Promos", "disponibles"],
   ["100%", "natural & calidad"],
 ];
 
@@ -116,11 +115,11 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
           >
             <div className="rounded-[2.5rem] border-2 border-ink bg-grape p-4 shadow-[7px_7px_0_var(--color-ink)]">
               <CupArt
-                name="Mont Blanc by Roa Brew"
+                name="Cold Brew"
                 categorySlug="cold-brew"
                 className="h-36 sm:h-48"
               />
-              <p className="mt-1 text-center font-display text-sm text-ink">Cold Brew</p>
+              <p className="mt-1 text-center font-display text-sm text-ink">Café</p>
             </div>
           </div>
 

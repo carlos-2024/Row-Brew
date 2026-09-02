@@ -3,6 +3,7 @@ import Reveal from "@/components/Reveal";
 import Marquee from "@/components/Marquee";
 import CupArt from "@/components/CupArt";
 import { BrandBadge } from "@/components/Brand";
+import PromoPicker from "@/components/PromoPicker";
 import { Sparkle } from "@/components/Leaf";
 import type { PromoView } from "@/lib/types";
 
@@ -46,7 +47,16 @@ export default function Promos({
 
       {/* Cinta superior */}
       <div className="mb-16 rotate-[0.8deg] border-y-2 border-cream/15 bg-ink py-3 font-display text-2xl text-grape">
-        <Marquee items={["PROMOS", "2x20", "2x22", "2x25", "SOLO ESTA TEMPORADA"]} reverse />
+        {/* Una sola frase, repetida para que la cinta llene la pantalla y el
+            bucle no deje huecos en monitores anchos */}
+        <Marquee
+          items={[
+            "SOLO ESTA TEMPORADA PROMOS DESDE 2x20",
+            "SOLO ESTA TEMPORADA PROMOS DESDE 2x20",
+            "SOLO ESTA TEMPORADA PROMOS DESDE 2x20",
+          ]}
+          reverse
+        />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-5">
@@ -100,8 +110,10 @@ export default function Promos({
                       {promo.label}
                     </p>
                     <p className="mt-2 text-sm font-bold opacity-60">
-                      {currency} {promo.price.toFixed(2)} las dos bebidas
+                      {currency} {promo.price.toFixed(2)} las {promo.quantity} bebidas
                     </p>
+
+                    <PromoPicker promo={promo} currency={currency} />
                   </div>
                 </article>
               </Reveal>

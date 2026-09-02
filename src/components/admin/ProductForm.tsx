@@ -19,13 +19,18 @@ type Product = {
   active: boolean;
   position: number;
   categoryId: string;
+  allyId: string | null;
 };
+
+type Ally = { id: string; name: string };
 
 export default function ProductForm({
   categories,
+  allies = [],
   product,
 }: {
   categories: Category[];
+  allies?: Ally[];
   product?: Product;
 }) {
   async function action(formData: FormData) {
@@ -130,6 +135,24 @@ export default function ProductForm({
               defaultValue={product?.position ?? 0}
               className={inputClass}
             />
+          </Field>
+
+          <Field
+            label="Marca aliada"
+            hint="Si eliges una, el producto sale en la sección de aliados y NO en la carta."
+          >
+            <select
+              name="allyId"
+              defaultValue={product?.allyId ?? ""}
+              className={inputClass}
+            >
+              <option value="">Producto propio de Roa Brew</option>
+              {allies.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
           </Field>
 
           <div className="grid gap-3 sm:col-span-2 sm:grid-cols-3">
