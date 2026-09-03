@@ -1,3 +1,6 @@
+"use client";
+
+import { useId } from "react";
 import { C } from "@/components/CupArt";
 
 /**
@@ -238,7 +241,9 @@ export default function PlateArt({
   kind: string;
   className?: string;
 }) {
-  const uid = `${kind}-${name.replace(/\W+/g, "")}`;
+  // Único por instancia: el mismo postre se dibuja en el carrusel y en la
+  // grilla, y dos clipPath con el mismo id no resuelven bien
+  const uid = useId().replace(/:/g, "");
 
   return (
     <svg

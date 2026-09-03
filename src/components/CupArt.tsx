@@ -1,3 +1,7 @@
+"use client";
+
+import { useId } from "react";
+
 /**
  * Ilustración generativa de cada bebida.
  *
@@ -125,7 +129,10 @@ export default function CupArt({
   animated = true,
 }: Props) {
   const p = drinkPalette(name, categorySlug);
-  const uid = `${categorySlug}-${name.replace(/\W+/g, "")}`;
+  // useId y no el nombre del producto: la misma bebida se dibuja dos veces
+  // en la página (carrusel de móvil y grilla de escritorio), y con ids
+  // repetidos el navegador no resuelve el degradado — el vaso salía vacío.
+  const uid = useId().replace(/:/g, "");
 
   return (
     <svg
@@ -175,9 +182,15 @@ export default function CupArt({
           </>
         )}
 
-        {/* Onda entre capas */}
+        {/* Onda entre capas.
+            Rellena hasta abajo y no solo su propio alto: como franja de 12
+            unidades quedaba flotando a media altura y, al mecerse, se leía
+            como una banda suelta dentro del vaso.
+            Va de x=8 a x=112, más ancha que el vaso, para que el vaivén no
+            despegue sus extremos de las paredes. Lo que sobra lo recorta el
+            contorno. */}
         <path
-          d="M20 96c12-8 22 6 34 1s22-11 34-3 12 6 12 6v12H20V96Z"
+          d="M8 96c14-9 26 7 40 2s26-13 40-3 16 7 24 3V170H8V96Z"
           fill={p.bottom}
           opacity="0.92"
           className={animated ? "liquid" : undefined}

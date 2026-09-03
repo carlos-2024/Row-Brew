@@ -39,21 +39,21 @@ export default function Destacados({
           </Link>
         </Reveal>
 
-        {/* En móvil van en cinta: cuatro tarjetas apiladas obligan a scrollear
-            demasiado antes de llegar a la carta. */}
-        <div className="marquee-mask -mx-5 overflow-hidden sm:hidden">
-          <div className="marquee-track" style={{ animationDuration: "40s" }}>
-            {[...products, ...products].map((product, i) => (
-              <div key={i} className="w-[17rem] shrink-0 px-2.5">
-                <ProductCard
-                  product={product}
-                  extras={extras}
-                  currency={currency}
-                  index={0}
-                />
-              </div>
-            ))}
-          </div>
+        {/* En móvil van en carrusel: cuatro tarjetas apiladas obligan a
+            scrollear demasiado antes de llegar a la carta. Se mueve con el
+            dedo, no solo: en una cinta automática la tarjeta se va justo
+            cuando el cliente iba a tocar Agregar. */}
+        <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-5 sm:hidden">
+          {products.map((product) => (
+            <div key={product.id} className="flex w-[78vw] max-w-[18rem] shrink-0 snap-start">
+              <ProductCard
+                product={product}
+                extras={extras}
+                currency={currency}
+                index={0}
+              />
+            </div>
+          ))}
         </div>
 
         <div className="hidden gap-5 sm:grid sm:grid-cols-2 lg:grid-cols-4">

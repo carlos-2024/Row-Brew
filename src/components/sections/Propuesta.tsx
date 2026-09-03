@@ -75,16 +75,18 @@ export default function Propuesta({ settings }: { settings: SiteSettings }) {
         </Reveal>
 
         {/* En móvil los cuatro pilares se apilaban y obligaban a scrollear
-            mucho; van en rotación infinita. Desde sm entran los cuatro a la
-            vez, así que ahí conviene la grilla. */}
-        <div className="marquee-mask -mx-5 mt-12 overflow-hidden sm:hidden">
-          <div className="marquee-track" style={{ animationDuration: "32s" }}>
-            {[...PILARES, ...PILARES].map((p, i) => (
-              <div key={i} className="w-[17rem] shrink-0 px-2.5">
-                <PilarCard pilar={p} />
-              </div>
-            ))}
-          </div>
+            mucho; van en carrusel. Se mueve con el dedo y no solo: una cinta
+            automática obliga a esperar a que vuelva la tarjeta que interesaba.
+            El scroll-snap encuadra cada tarjeta al soltar, y el ancho menor
+            al de la pantalla deja asomar la siguiente, que es lo que avisa de
+            que hay más. Desde sm entran las cuatro a la vez, así que ahí
+            conviene la grilla. */}
+        <div className="no-scrollbar -mx-5 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-5 sm:hidden">
+          {PILARES.map((p) => (
+            <div key={p.title} className="flex w-[78vw] max-w-[18rem] shrink-0 snap-start">
+              <PilarCard pilar={p} />
+            </div>
+          ))}
         </div>
 
         <div className="mt-14 hidden gap-5 sm:grid sm:grid-cols-2 lg:grid-cols-4">
