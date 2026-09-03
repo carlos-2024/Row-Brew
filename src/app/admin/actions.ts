@@ -232,6 +232,8 @@ export async function saveExtra(formData: FormData) {
     price: num(formData, "price"),
     active: bool(formData, "active"),
     position: num(formData, "position"),
+    // Sin grupo se ofrece en todos los productos, como antes
+    groupId: str(formData, "groupId") || null,
   };
 
   if (id) {
@@ -248,6 +250,59 @@ export async function deleteExtra(formData: FormData) {
   const id = str(formData, "id");
   if (id) await prisma.extra.delete({ where: { id } });
   await refresh("Eliminado");
+}
+
+// ──────────────────── Grupos de opcionales ────────────────────
+
+export async function saveExtraGroup(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const name = str(formData, "name");
+  if (!name) throw new Error("El nombre del grupo es obligatorio.");
+
+  const data = {
+    name,
+    hint: str(formData, "hint") || null,
+    // 0 es sin límite; 1 hace que elegir una desmarque la anterior
+    maxChoices: Math.max(0, num(formData, "maxChoices")),
+    position: num(formData, "position"),
+    active: bool(formData, "active"),
+  };
+
+  if (id) {
+    await prisma.extraGroup.update({ where: { id }, data });
+  } else {
+    await prisma.extraGroup.create({ data });
+  }
+
+  await refresh();
+}
+
+export async function deleteExtraGroup(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  // Sus opciones no se borran: quedan sueltas, que es el comportamiento de
+  // siempre. Borrarlas en cascada haría desaparecer precios ya configurados
+  // por un clic en el grupo equivocado.
+  if (id) await prisma.extraGroup.delete({ where: { id } });
+  await refresh("Eliminado");
+}
+
+/** Qué productos ofrecen este grupo. */
+export async function linkExtraGroupProducts(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  if (!id) return;
+
+  const productIds = formData.getAll("productIds").map(String).filter(Boolean);
+  await prisma.extraGroup.update({
+    where: { id },
+    data: { products: { set: productIds.map((pid) => ({ id: pid })) } },
+  });
+
+  await refresh(`${productIds.length} productos vinculados`);
 }
 
 // ─────────────────────────── Pedidos ───────────────────────────

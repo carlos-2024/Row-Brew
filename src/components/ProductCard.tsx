@@ -3,7 +3,7 @@
 import { useState } from "react";
 import ProductArt from "@/components/ProductArt";
 import { useCart } from "@/components/cart/CartProvider";
-import type { CartExtra, MenuExtra, MenuProduct } from "@/lib/types";
+import type { CartExtra, MenuExtra, MenuExtraGroup, MenuProduct } from "@/lib/types";
 
 type Props = {
   product: MenuProduct;
@@ -27,12 +27,33 @@ export default function ProductCard({ product, extras, currency, index = 0 }: Pr
   const extrasTotal = selected.reduce((s, e) => s + e.price, 0);
   const badge = product.badge ? BADGES[product.badge] : null;
 
-  function toggleExtra(extra: MenuExtra) {
-    setSelected((prev) =>
-      prev.some((e) => e.name === extra.name)
-        ? prev.filter((e) => e.name !== extra.name)
-        : [...prev, { name: extra.name, price: extra.price }]
-    );
+  const grupos = product.extraGroups ?? [];
+  /** Todo lo que se puede elegir en esta tarjeta, para el tope de cada grupo */
+  const hayOpciones = grupos.length > 0 || extras.length > 0;
+
+  /**
+   * Marca o desmarca una opción.
+   *
+   * Cuando el grupo tiene tope y ya se llegó, la nueva elección reemplaza a
+   * la más antigua del mismo grupo. Es lo que se espera del tipo de leche:
+   * elegir Almendra debe quitar Avena, no rebotar sin explicación.
+   */
+  function toggleExtra(extra: MenuExtra, grupo?: MenuExtraGroup) {
+    setSelected((prev) => {
+      if (prev.some((e) => e.name === extra.name)) {
+        return prev.filter((e) => e.name !== extra.name);
+      }
+
+      const elegido = { name: extra.name, price: extra.price };
+      if (!grupo || grupo.maxChoices < 1) return [...prev, elegido];
+
+      const delGrupo = new Set(grupo.extras.map((e) => e.name));
+      const propias = prev.filter((e) => delGrupo.has(e.name));
+      if (propias.length < grupo.maxChoices) return [...prev, elegido];
+
+      const sale = propias[0].name;
+      return [...prev.filter((e) => e.name !== sale), elegido];
+    });
   }
 
   function handleAdd() {
@@ -90,29 +111,83 @@ export default function ProductCard({ product, extras, currency, index = 0 }: Pr
         )}
 
         {/* Extras */}
-        {picking && extras.length > 0 && (
-          <div className="mt-3 rounded-2xl border-2 border-ink/12 bg-white/60 p-3">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-roa-600">
-              Extras
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {extras.map((extra) => {
-                const on = selected.some((e) => e.name === extra.name);
-                return (
-                  <button
-                    key={extra.id}
-                    onClick={() => toggleExtra(extra)}
-                    className={`rounded-full border-2 px-3 py-1.5 text-xs font-bold transition ${
-                      on
-                        ? "border-ink bg-roa-500 text-cream"
-                        : "border-ink/15 bg-cream hover:border-ink/45"
-                    }`}
-                  >
-                    {extra.name} +{extra.price}
-                  </button>
-                );
-              })}
-            </div>
+        {picking && hayOpciones && (
+          <div className="mt-3 space-y-3 rounded-2xl border-2 border-ink/12 bg-white/60 p-3">
+            {grupos.map((grupo) => {
+              const elegidasAqui = selected.filter((s) =>
+                grupo.extras.some((e) => e.name === s.name)
+              ).length;
+
+              return (
+                <div key={grupo.id}>
+                  <p className="mb-1.5 flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-roa-600">
+                      {grupo.name}
+                    </span>
+                    {grupo.hint && (
+                      <span className="font-hand text-base leading-none text-ink/45">
+                        {grupo.hint}
+                      </span>
+                    )}
+                    {grupo.maxChoices > 0 && (
+                      <span className="text-[11px] text-ink/35">
+                        {elegidasAqui}/{grupo.maxChoices}
+                      </span>
+                    )}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {grupo.extras.map((extra) => {
+                      const on = selected.some((e) => e.name === extra.name);
+                      return (
+                        <button
+                          key={extra.id}
+                          onClick={() => toggleExtra(extra, grupo)}
+                          aria-pressed={on}
+                          className={`rounded-full border-2 px-3 py-1.5 text-xs font-bold transition ${
+                            on
+                              ? "border-ink bg-roa-500 text-cream"
+                              : "border-ink/15 bg-cream hover:border-ink/45"
+                          }`}
+                        >
+                          {extra.name}
+                          {extra.price > 0 && ` +${extra.price}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Opcionales sueltos: valen para cualquier producto */}
+            {extras.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-xs font-bold uppercase tracking-wider text-roa-600">
+                  Extras
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {extras.map((extra) => {
+                    const on = selected.some((e) => e.name === extra.name);
+                    return (
+                      <button
+                        key={extra.id}
+                        onClick={() => toggleExtra(extra)}
+                        aria-pressed={on}
+                        className={`rounded-full border-2 px-3 py-1.5 text-xs font-bold transition ${
+                          on
+                            ? "border-ink bg-roa-500 text-cream"
+                            : "border-ink/15 bg-cream hover:border-ink/45"
+                        }`}
+                      >
+                        {extra.name}
+                        {extra.price > 0 && ` +${extra.price}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -129,7 +204,7 @@ export default function ProductCard({ product, extras, currency, index = 0 }: Pr
           </div>
 
           <div className="flex items-center gap-1.5">
-            {extras.length > 0 && (
+            {hayOpciones && (
               <button
                 onClick={() => setPicking((v) => !v)}
                 aria-label="Elegir extras"

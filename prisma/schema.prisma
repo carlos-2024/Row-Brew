@@ -57,6 +57,9 @@ model Product {
   /// entran todas las de su categoría.
   promos      Promo[]     @relation("PromoProducts")
 
+  /// Grupos de opcionales que ofrece, además de los extras sueltos
+  extraGroups ExtraGroup[] @relation("ProductExtraGroups")
+
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -65,12 +68,43 @@ model Product {
   @@index([allyId])
 }
 
+/// Grupo de opcionales: "Leche", "Boba", "Tipo de café".
+///
+/// Existe para que cada producto ofrezca solo lo que le corresponde: una
+/// lista plana obligaba a mostrarle "Shot extra de cold brew" a un matcha.
+model ExtraGroup {
+  id   String @id @default(cuid())
+  name String
+  /// Texto de ayuda bajo el título, p. ej. "elige una"
+  hint String?
+
+  /// Cuántas opciones puede marcar el cliente. 0 es sin límite; 1 hace que
+  /// elegir una desmarque la anterior, como el tipo de leche.
+  maxChoices Int     @default(0)
+  position   Int     @default(0)
+  active     Boolean @default(true)
+
+  extras   Extra[]
+  /// Productos que lo ofrecen. Vacío: no lo ofrece nadie.
+  products Product[] @relation("ProductExtraGroups")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Extra {
   id       String  @id @default(cuid())
   name     String
   price    Decimal @db.Decimal(10, 2)
   active   Boolean @default(true)
   position Int     @default(0)
+
+  /// Sin grupo se sigue ofreciendo en todos los productos, que es como
+  /// funcionaban los extras antes de que existieran los grupos.
+  groupId String?
+  group   ExtraGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  @@index([groupId])
 }
 
 model Promo {

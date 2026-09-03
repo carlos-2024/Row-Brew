@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { toNumber } from "@/lib/format";
-import type { MenuCategory, MenuExtra, MenuProduct, PromoView } from "@/lib/types";
+import type {
+  MenuCategory,
+  MenuExtra,
+  MenuProduct,
+  PromoView,
+} from "@/lib/types";
 import type { PromoRule } from "@/lib/pricing";
 
 /** Carta completa, agrupada por categoría y lista para el cliente. */
@@ -15,6 +20,19 @@ export async function getMenu(): Promise<MenuCategory[]> {
           // sección, no desde la carta
           where: { active: true, allyId: null },
           orderBy: [{ position: "asc" }, { name: "asc" }],
+          include: {
+            // Grupos de opcionales que ofrece este producto en concreto
+            extraGroups: {
+              where: { active: true },
+              orderBy: { position: "asc" },
+              include: {
+                extras: {
+                  where: { active: true },
+                  orderBy: [{ position: "asc" }, { name: "asc" }],
+                },
+              },
+            },
+          },
         },
       },
     });
@@ -22,29 +40,40 @@ export async function getMenu(): Promise<MenuCategory[]> {
     return categories
       .filter((c) => c.products.length > 0)
       .map((c) => ({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      tagline: c.tagline,
-      description: c.description,
-      theme: c.theme,
-      emoji: c.emoji,
-      kind: c.kind,
-      products: c.products.map((p) => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        description: p.description,
-        price: toNumber(p.price),
-        imageUrl: p.imageUrl,
-        badge: p.badge,
-        size: p.size,
-        featured: p.featured,
-        promoEligible: p.promoEligible,
-        categorySlug: c.slug,
-        categoryName: c.name,
-        categoryKind: c.kind,
-      })),
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        tagline: c.tagline,
+        description: c.description,
+        theme: c.theme,
+        emoji: c.emoji,
+        kind: c.kind,
+        products: c.products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          description: p.description,
+          price: toNumber(p.price),
+          imageUrl: p.imageUrl,
+          badge: p.badge,
+          size: p.size,
+          featured: p.featured,
+          promoEligible: p.promoEligible,
+          categorySlug: c.slug,
+          categoryName: c.name,
+          categoryKind: c.kind,
+          extraGroups: p.extraGroups.map((g) => ({
+            id: g.id,
+            name: g.name,
+            hint: g.hint,
+            maxChoices: g.maxChoices,
+            extras: g.extras.map((e) => ({
+              id: e.id,
+              name: e.name,
+              price: toNumber(e.price),
+            })),
+          })),
+        })),
       }));
   } catch {
     return [];
@@ -107,23 +136,24 @@ export async function getPromos(): Promise<PromoView[]> {
         // aunque la promo no se aplique sola al juntar bebidas sueltas.
         // Las bebidas elegidas a mano mandan; si no se eligió ninguna se
         // ofrecen todas las de la categoría, como funcionaba antes.
-        products: (p.products.length > 0 ? p.products : (cat?.products ?? [])).map(
-          (prod) => ({
-            id: prod.id,
-            name: prod.name,
-            slug: prod.slug,
-            description: prod.description,
-            price: toNumber(prod.price),
-            imageUrl: prod.imageUrl,
-            badge: prod.badge,
-            size: prod.size,
-            featured: prod.featured,
-            promoEligible: prod.promoEligible,
-            categorySlug: cat?.slug ?? "",
-            categoryName: cat?.name ?? "",
-            categoryKind: cat?.kind ?? "bebida",
-          })
-        ),
+        products: (p.products.length > 0
+          ? p.products
+          : (cat?.products ?? [])
+        ).map((prod) => ({
+          id: prod.id,
+          name: prod.name,
+          slug: prod.slug,
+          description: prod.description,
+          price: toNumber(prod.price),
+          imageUrl: prod.imageUrl,
+          badge: prod.badge,
+          size: prod.size,
+          featured: prod.featured,
+          promoEligible: prod.promoEligible,
+          categorySlug: cat?.slug ?? "",
+          categoryName: cat?.name ?? "",
+          categoryKind: cat?.kind ?? "bebida",
+        })),
       };
     });
   } catch {
@@ -164,8 +194,10 @@ export async function getAutoPromos(): Promise<PromoRule[]> {
 
 export async function getExtras(): Promise<MenuExtra[]> {
   try {
+    // Solo los sueltos: los agrupados viajan con cada producto, porque
+    // dependen de a qué producto se vinculó su grupo.
     const extras = await prisma.extra.findMany({
-      where: { active: true },
+      where: { active: true, groupId: null },
       orderBy: { position: "asc" },
     });
     return extras.map((e) => ({
@@ -186,12 +218,18 @@ export async function getExtras(): Promise<MenuExtra[]> {
  * inventa un descuento, y `priceCart` igual exige que estén las bebidas.
  */
 export async function getPromoRulesByIds(ids: string[]): Promise<PromoRule[]> {
-  const limpios = [...new Set(ids.filter((id) => typeof id === "string" && id))];
+  const limpios = [
+    ...new Set(ids.filter((id) => typeof id === "string" && id)),
+  ];
   if (limpios.length === 0) return [];
 
   try {
     const promos = await prisma.promo.findMany({
-      where: { id: { in: limpios.slice(0, 10) }, active: true, categoryId: { not: null } },
+      where: {
+        id: { in: limpios.slice(0, 10) },
+        active: true,
+        categoryId: { not: null },
+      },
       orderBy: { position: "asc" },
       include: {
         category: { select: { slug: true } },
