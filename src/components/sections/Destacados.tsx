@@ -2,8 +2,6 @@ import Link from "next/link";
 import Reveal from "@/components/Reveal";
 import ProductCard from "@/components/ProductCard";
 import BobaField from "@/components/BobaField";
-import { KodaMark } from "@/components/Logo";
-import { Sparkle } from "@/components/Leaf";
 import type { MenuExtra, MenuProduct } from "@/lib/types";
 
 export default function Destacados({
@@ -73,23 +71,14 @@ export default function Destacados({
         <Reveal delay={200}>
           <Link
             href="/fidelidad"
-            className="group mx-auto mt-14 flex w-full max-w-2xl flex-col items-center gap-5 rounded-[2.5rem] border-2 border-ink bg-mango px-7 py-8 text-center text-ink shadow-[6px_6px_0_var(--color-ink)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[11px_13px_0_var(--color-ink)] sm:flex-row sm:text-left"
+            className="group mx-auto mt-14 flex w-full max-w-2xl flex-col items-center gap-4 rounded-[2.5rem] border-2 border-ink bg-mango px-7 py-7 text-center text-ink shadow-[6px_6px_0_var(--color-ink)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[11px_13px_0_var(--color-ink)] sm:flex-row sm:text-left"
           >
-            <span className="relative grid h-20 w-20 shrink-0 place-items-center rounded-full border-2 border-ink bg-cream">
-              <KodaMark className="h-11 w-11 text-roa-600" />
-              <Sparkle className="absolute -right-1 -top-1 h-6 w-6 animate-spin-slow text-grape-deep" />
-            </span>
-
             <span className="flex-1">
               <span className="block font-hand text-2xl leading-none text-ink/60">
                 junta sellos, toma gratis
               </span>
               <span className="mt-1 block font-display text-[clamp(1.9rem,5vw,2.7rem)] leading-none">
                 Roa Brew Points
-              </span>
-              <span className="mt-2 block text-sm text-ink/70">
-                A los 5 sellos agrandas tu bebida, a los 10 la siguiente va por la
-                casa. Y en tu cumpleaños, una de regalo.
               </span>
             </span>
 
