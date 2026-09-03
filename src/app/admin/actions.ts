@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { slugify } from "@/lib/format";
@@ -22,7 +23,18 @@ async function requireSession() {
   return session;
 }
 
-function refresh() {
+/**
+ * Refresca las pantallas y deja el aviso de que se guardó.
+ *
+ * El aviso viaja en una cookie de diez segundos y no en el estado de cada
+ * formulario: son 27 acciones y todas terminan acá, así que ponerlo en un
+ * solo sitio evita tener que acordarse en cada una. La lee el layout del
+ * panel en el render siguiente y la borra el propio aviso al desaparecer.
+ */
+async function refresh(mensaje = "Cambios guardados") {
+  const jar = await cookies();
+  // Sin httpOnly a propósito: el aviso se borra desde el navegador
+  jar.set("roa_flash", mensaje, { path: "/admin", maxAge: 10, sameSite: "lax" });
   revalidatePath("/", "layout");
 }
 
@@ -88,14 +100,14 @@ export async function saveProduct(formData: FormData) {
     });
   }
 
-  refresh();
+  await refresh();
 }
 
 export async function deleteProduct(formData: FormData) {
   await requireSession();
   const id = str(formData, "id");
   if (id) await prisma.product.delete({ where: { id } });
-  refresh();
+  await refresh("Eliminado");
 }
 
 export async function toggleProduct(formData: FormData) {
@@ -108,7 +120,7 @@ export async function toggleProduct(formData: FormData) {
       data: { active: !product.active },
     });
   }
-  refresh();
+  await refresh("Cambio aplicado");
 }
 
 // ─────────────────────────── Categorías ───────────────────────────
@@ -139,7 +151,7 @@ export async function saveCategory(formData: FormData) {
     });
   }
 
-  refresh();
+  await refresh();
 }
 
 export async function deleteCategory(formData: FormData) {
@@ -155,7 +167,7 @@ export async function deleteCategory(formData: FormData) {
   }
 
   await prisma.category.delete({ where: { id } });
-  refresh();
+  await refresh("Eliminado");
 }
 
 // ─────────────────────────── Promos ───────────────────────────
@@ -196,14 +208,14 @@ export async function savePromo(formData: FormData) {
     });
   }
 
-  refresh();
+  await refresh();
 }
 
 export async function deletePromo(formData: FormData) {
   await requireSession();
   const id = str(formData, "id");
   if (id) await prisma.promo.delete({ where: { id } });
-  refresh();
+  await refresh("Eliminado");
 }
 
 // ─────────────────────────── Extras ───────────────────────────
@@ -228,14 +240,14 @@ export async function saveExtra(formData: FormData) {
     await prisma.extra.create({ data });
   }
 
-  refresh();
+  await refresh();
 }
 
 export async function deleteExtra(formData: FormData) {
   await requireSession();
   const id = str(formData, "id");
   if (id) await prisma.extra.delete({ where: { id } });
-  refresh();
+  await refresh("Eliminado");
 }
 
 // ─────────────────────────── Pedidos ───────────────────────────
@@ -318,7 +330,7 @@ export async function toggleBlockedDate(formData: FormData) {
     });
   }
 
-  refresh();
+  await refresh("Cambio aplicado");
 }
 
 // ─────────────────────────── Aliados ───────────────────────────
@@ -349,7 +361,7 @@ export async function saveAlly(formData: FormData) {
     });
   }
 
-  refresh();
+  await refresh();
 }
 
 async function uniqueAllySlug(base: string): Promise<string> {
@@ -376,7 +388,7 @@ export async function deleteAlly(formData: FormData) {
   }
 
   await prisma.ally.delete({ where: { id } });
-  refresh();
+  await refresh("Eliminado");
 }
 
 export async function addAllyImage(formData: FormData) {
@@ -400,14 +412,14 @@ export async function addAllyImage(formData: FormData) {
     },
   });
 
-  refresh();
+  await refresh();
 }
 
 export async function deleteAllyImage(formData: FormData) {
   await requireSession();
   const id = str(formData, "id");
   if (id) await prisma.allyImage.delete({ where: { id } });
-  refresh();
+  await refresh("Eliminado");
 }
 
 // ─────────────────────────── Fidelidad ───────────────────────────
@@ -627,5 +639,5 @@ export async function saveSettings(formData: FormData) {
     )
   );
 
-  refresh();
+  await refresh();
 }

@@ -43,7 +43,7 @@ export default function Destacados({
             scrollear demasiado antes de llegar a la carta. Se mueve con el
             dedo, no solo: en una cinta automática la tarjeta se va justo
             cuando el cliente iba a tocar Agregar. */}
-        <div className="no-scrollbar -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-5 sm:hidden">
+        <div className="no-scrollbar overscroll-x-contain -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-5 sm:hidden">
           {products.map((product) => (
             <div key={product.id} className="flex w-[78vw] max-w-[18rem] shrink-0 snap-start">
               <ProductCard

@@ -81,7 +81,7 @@ export default function Propuesta({ settings }: { settings: SiteSettings }) {
             al de la pantalla deja asomar la siguiente, que es lo que avisa de
             que hay más. Desde sm entran las cuatro a la vez, así que ahí
             conviene la grilla. */}
-        <div className="no-scrollbar -mx-5 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-5 sm:hidden">
+        <div className="no-scrollbar overscroll-x-contain -mx-5 mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-5 px-5 pb-5 sm:hidden">
           {PILARES.map((p) => (
             <div key={p.title} className="flex w-[78vw] max-w-[18rem] shrink-0 snap-start">
               <PilarCard pilar={p} />

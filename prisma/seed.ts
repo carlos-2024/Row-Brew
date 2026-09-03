@@ -184,12 +184,14 @@ const CATALOG: {
       },
       {
         name: "Pink Green Cloud",
-        description: "Base cremosa de fresa coronada con una nube de matcha batido.",
+        description:
+          "Base cremosa de fresa coronada con una nube de matcha batido.",
         price: 16,
       },
       {
         name: "Pink Foam Matcha",
-        description: "Matcha con cold foam rosado de fresa. Nuestro favorito de temporada.",
+        description:
+          "Matcha con cold foam rosado de fresa. Nuestro favorito de temporada.",
         price: 14,
       },
     ],
@@ -213,7 +215,8 @@ const CATALOG: {
       },
       {
         name: "Cold Brew",
-        description: "Nuestro cold brew puro, extraído lentamente durante 18 a 24 horas.",
+        description:
+          "Nuestro cold brew puro, extraído lentamente durante 18 a 24 horas.",
         price: 10,
         featured: true,
       },
@@ -270,7 +273,8 @@ const CATALOG: {
       },
       {
         name: "Vainilla Brew Latte",
-        description: "Cold brew con syrup de vainilla francesa y leche espumada.",
+        description:
+          "Cold brew con syrup de vainilla francesa y leche espumada.",
         price: 12,
       },
       {
@@ -333,7 +337,11 @@ const CATALOG: {
         featured: true,
       },
       { name: "Mango Milk Tea", description: "Té + leche + mango.", price: 14 },
-      { name: "Fresita Milk Tea", description: "Té + leche + fresa.", price: 14 },
+      {
+        name: "Fresita Milk Tea",
+        description: "Té + leche + fresa.",
+        price: 14,
+      },
     ],
   },
 ];
@@ -454,7 +462,8 @@ async function main() {
   // aquí sería una puerta abierta. Si no se define ADMIN_PASSWORD se genera
   // una aleatoria y se imprime una única vez.
   const generated = !process.env.ADMIN_PASSWORD;
-  const password = process.env.ADMIN_PASSWORD || randomBytes(9).toString("base64url");
+  const password =
+    process.env.ADMIN_PASSWORD || randomBytes(9).toString("base64url");
   const passwordHash = await bcrypt.hash(password, 10);
 
   const existing = await prisma.adminUser.findUnique({ where: { email } });
@@ -476,21 +485,32 @@ async function main() {
   }
 
   // ── Ajustes ────────────────────────────────────────────
+  // Los vacíos no se escriben. getSettings resuelve con
+  // { ...DEFAULT_SETTINGS, ...loQueHayEnLaBase }, así que una fila vacía no
+  // deja el ajuste "sin definir": pisa el valor por defecto del código. Eso
+  // dejaba sin mapa a las zonas de reparto en cuanto corría el seed.
+  let ajustes = 0;
   for (const [key, value] of Object.entries(SETTINGS)) {
+    if (!String(value).trim()) continue;
     await prisma.setting.upsert({
       where: { key },
-      update: {},
+      update: {}, // nunca se pisa lo configurado desde el panel
       create: { key, value },
     });
+    ajustes++;
   }
-  console.log(`⚙️  ${Object.keys(SETTINGS).length} ajustes cargados`);
+  console.log(`⚙️  ${ajustes} ajustes cargados`);
 
   // ── Extras ─────────────────────────────────────────────
-  for (const [i, extra] of EXTRAS.entries()) {
-    const existing = await prisma.extra.findFirst({ where: { name: extra.name } });
-    if (!existing) {
+  // Solo si no hay ninguno. Antes se comprobaba extra por extra buscando
+  // por nombre: al renombrar uno desde el panel dejaba de reconocerlo y el
+  // siguiente despliegue lo volvía a crear, duplicándolo.
+  if ((await prisma.extra.count()) === 0) {
+    for (const [i, extra] of EXTRAS.entries()) {
       await prisma.extra.create({ data: { ...extra, position: i } });
     }
+  } else {
+    console.log("➕  Ya hay extras cargados: no se toca ninguno");
   }
   console.log(`➕ ${EXTRAS.length} extras cargados`);
 
@@ -539,27 +559,33 @@ async function main() {
   console.log(`\n🥤 ${totalProducts} productos en total`);
 
   // ── Promos ─────────────────────────────────────────────
-  for (const [i, promo] of PROMOS.entries()) {
-    const category = await prisma.category.findUnique({
-      where: { slug: promo.categorySlug },
-    });
-    const existing = await prisma.promo.findFirst({
-      where: { title: promo.title, label: promo.label },
-    });
-    const data = {
-      title: promo.title,
-      label: promo.label,
-      detail: promo.detail,
-      price: promo.price,
-      quantity: 2,
-      theme: promo.theme,
-      position: i,
-      categoryId: category?.id ?? null,
-    };
-    // Igual que arriba: si la promo ya existe se respeta tal cual quedó.
-    if (!existing) await prisma.promo.create({ data });
+  // Solo se cargan si la tabla está vacía. La comprobación anterior era por
+  // título y etiqueta, y el panel deja editar los dos: al renombrar una promo
+  // el seed dejaba de encontrarla y en el siguiente despliegue creaba otra
+  // con los valores de fábrica, así que aparecían duplicadas y con la
+  // configuración de fábrica encima.
+  if ((await prisma.promo.count()) > 0) {
+    console.log("🏷️  Ya hay promos cargadas: no se toca ninguna");
+  } else {
+    for (const [i, promo] of PROMOS.entries()) {
+      const category = await prisma.category.findUnique({
+        where: { slug: promo.categorySlug },
+      });
+
+      const data = {
+        title: promo.title,
+        label: promo.label,
+        detail: promo.detail,
+        price: promo.price,
+        quantity: 2,
+        theme: promo.theme,
+        position: i,
+        categoryId: category?.id ?? null,
+      };
+      await prisma.promo.create({ data });
+    }
+    console.log(`🏷️  ${PROMOS.length} promos cargadas`);
   }
-  console.log(`🏷️  ${PROMOS.length} promos cargadas`);
 
   // ── Aliados ────────────────────────────────────────────
   for (const [i, aliado] of ALIADOS.entries()) {

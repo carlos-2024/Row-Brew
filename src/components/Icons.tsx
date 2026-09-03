@@ -332,3 +332,12 @@ export function CategoryIcon({
   const Icon = CATEGORY_ICONS[slug] ?? BobaIcon;
   return <Icon className={className} />;
 }
+
+/** Visto, para confirmar que algo se guardó */
+export function CheckIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="m4.5 12.8 5 5L19.5 6.5" />
+    </svg>
+  );
+}
