@@ -1,8 +1,9 @@
 "use client";
 
+import { nombreProductos } from "@/lib/format";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import CupArt from "@/components/CupArt";
+import ProductArt from "@/components/ProductArt";
 import { useCart } from "@/components/cart/CartProvider";
 import { Sparkle } from "@/components/Leaf";
 import type { PromoView } from "@/lib/types";
@@ -129,7 +130,7 @@ export default function PromoPicker({
               <div className="px-6 py-5">
                 <p className="mb-4 text-sm font-bold text-roa-700">
                   {faltan > 0
-                    ? `Elige ${faltan} bebida${faltan > 1 ? "s" : ""} más`
+                    ? `Elige ${faltan} ${nombreProductos(promo.products.map((p) => p.categoryKind), faltan)} más`
                     : "¡Combo completo!"}
                   <span className="ml-2 font-normal text-ink/45">
                     {total} de {promo.quantity}
@@ -151,9 +152,10 @@ export default function PromoPicker({
                         } ${lleno ? "opacity-40" : ""}`}
                       >
                         <div className="grid h-14 w-11 shrink-0 place-items-center rounded-xl bg-roa-200">
-                          <CupArt
+                          <ProductArt
                             name={p.name}
                             categorySlug={p.categorySlug}
+                            kind={p.categoryKind}
                             className="h-12"
                             animated={false}
                           />

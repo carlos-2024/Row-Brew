@@ -18,11 +18,11 @@ export default async function NuevoProductoPage() {
 
   return (
     <>
-      <AdminHeader kicker="catálogo" title="Nueva bebida" />
+      <AdminHeader kicker="catálogo" title="Nuevo producto" />
       {categories.length === 0 ? (
         <EmptyState
           title="Primero crea una categoría"
-          text="Cada bebida necesita pertenecer a una familia (Sparkling Tea, Matcha, Cold Brew…)."
+          text="Cada producto necesita una familia. La familia decide si es bebida, comida o postre, y con eso cómo se dibuja en la carta."
           action={<LinkButton href="/admin/categorias">Ir a categorías</LinkButton>}
         />
       ) : (

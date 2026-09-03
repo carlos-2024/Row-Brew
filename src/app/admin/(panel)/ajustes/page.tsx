@@ -250,7 +250,7 @@ export default async function AjustesPage() {
       {/* Extras */}
       <Panel title="Extras de la carta" className="mt-6">
         <p className="mb-5 text-sm text-cream/45">
-          Son los adicionales que el cliente puede sumar a cualquier bebida (tapioca,
+          Son los adicionales que el cliente puede sumar a cualquier producto (tapioca,
           popping boba, leche sin lactosa…). El precio se recalcula en el servidor al
           hacer el pedido.
         </p>

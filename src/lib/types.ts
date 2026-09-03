@@ -11,6 +11,8 @@ export type MenuProduct = {
   promoEligible: boolean;
   categorySlug: string;
   categoryName: string;
+  /** bebida | comida | postre, heredado de su familia */
+  categoryKind: string;
 };
 
 export type MenuCategory = {
@@ -21,6 +23,8 @@ export type MenuCategory = {
   description: string | null;
   theme: string;
   emoji: string;
+  /** bebida | comida | postre */
+  kind: string;
   products: MenuProduct[];
 };
 
@@ -89,5 +93,7 @@ export type CartItem = {
   quantity: number;
   extras: CartExtra[];
   categorySlug: string;
+  /** Para dibujarlo bien en el carrito sin volver a consultar la carta */
+  categoryKind: string;
   promoEligible: boolean;
 };

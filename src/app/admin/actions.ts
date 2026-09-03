@@ -124,6 +124,7 @@ export async function saveCategory(formData: FormData) {
     name,
     tagline: str(formData, "tagline") || null,
     description: str(formData, "description") || null,
+    kind: str(formData, "kind") || "bebida",
     theme: str(formData, "theme") || "green",
     emoji: str(formData, "emoji") || "🧋",
     position: num(formData, "position"),

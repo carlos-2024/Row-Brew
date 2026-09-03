@@ -15,7 +15,7 @@ type Palette = {
   ice: boolean;
 };
 
-const C = {
+export const C = {
   matcha: "#7EA23F",
   matchaDeep: "#5C7C2B",
   milk: "#F6EFDD",

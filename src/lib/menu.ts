@@ -29,6 +29,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
       description: c.description,
       theme: c.theme,
       emoji: c.emoji,
+      kind: c.kind,
       products: c.products.map((p) => ({
         id: p.id,
         name: p.name,
@@ -42,6 +43,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
         promoEligible: p.promoEligible,
         categorySlug: c.slug,
         categoryName: c.name,
+        categoryKind: c.kind,
       })),
       }));
   } catch {
@@ -70,6 +72,7 @@ export async function getPromos(): Promise<PromoView[]> {
           select: {
             slug: true,
             name: true,
+            kind: true,
             // Solo las bebidas que de verdad entran en la promo. Se traen
             // únicamente para las promos que el carrito cobra solas: son las
             // únicas donde tiene sentido ofrecer armar el combo.
@@ -117,6 +120,7 @@ export async function getPromos(): Promise<PromoView[]> {
             promoEligible: prod.promoEligible,
             categorySlug: cat?.slug ?? "",
             categoryName: cat?.name ?? "",
+            categoryKind: cat?.kind ?? "bebida",
           })
         ),
       };

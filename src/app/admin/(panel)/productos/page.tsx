@@ -10,7 +10,7 @@ import {
   LinkButton,
   Panel,
 } from "@/components/admin/ui";
-import CupArt from "@/components/CupArt";
+import ProductArt from "@/components/ProductArt";
 import { CategoryIcon } from "@/components/Icons";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +37,7 @@ export default async function ProductosPage({
       <AdminHeader
         kicker="catálogo"
         title="Productos"
-        action={<LinkButton href="/admin/productos/nuevo">+ Nueva bebida</LinkButton>}
+        action={<LinkButton href="/admin/productos/nuevo">+ Nuevo producto</LinkButton>}
       />
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -70,8 +70,8 @@ export default async function ProductosPage({
       {products.length === 0 ? (
         <EmptyState
           title="No hay productos"
-          text="Crea tu primera bebida o corre el seed para cargar la carta completa."
-          action={<LinkButton href="/admin/productos/nuevo">+ Nueva bebida</LinkButton>}
+          text="Crea tu primer producto o corre el seed para cargar la carta completa."
+          action={<LinkButton href="/admin/productos/nuevo">+ Nuevo producto</LinkButton>}
         />
       ) : (
         <Panel className="!p-0">
@@ -92,9 +92,10 @@ export default async function ProductosPage({
                       className="h-14 w-full object-contain"
                     />
                   ) : (
-                    <CupArt
+                    <ProductArt
                       name={product.name}
                       categorySlug={product.category.slug}
+                      kind={product.category.kind}
                       className="h-14"
                       animated={false}
                     />

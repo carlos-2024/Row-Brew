@@ -192,3 +192,10 @@ export const THEME_OPTIONS = [
   { value: "black", label: "Negro" },
   { value: "purple", label: "Morado" },
 ];
+
+/** Qué se sirve en una familia. Decide el dibujo y cómo se le llama en la carta. */
+export const KIND_OPTIONS = [
+  { value: "bebida", label: "Bebidas" },
+  { value: "comida", label: "Comidas" },
+  { value: "postre", label: "Postres" },
+];

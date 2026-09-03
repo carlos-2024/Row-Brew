@@ -122,6 +122,7 @@ export function CartProvider({
             quantity,
             extras,
             categorySlug: product.categorySlug,
+            categoryKind: product.categoryKind,
             promoEligible: product.promoEligible,
           },
         ];

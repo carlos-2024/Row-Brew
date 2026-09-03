@@ -1,10 +1,12 @@
 "use client";
 
+import { nombreProductos } from "@/lib/format";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, unitPrice } from "./CartProvider";
 import AddressSearch, { type Direccion } from "./AddressSearch";
 import CupArt from "@/components/CupArt";
+import ProductArt from "@/components/ProductArt";
 import Calendar from "@/components/events/Calendar";
 import {
   StoreIcon,
@@ -201,7 +203,9 @@ export default function CartDrawer({
           <div>
             <p className="font-hand text-xl leading-none text-roa-100">tu pedido</p>
             <h2 className="font-display text-2xl">
-              {count > 0 ? `${count} bebida${count > 1 ? "s" : ""}` : "Carrito vacío"}
+              {count > 0
+                ? `${count} ${nombreProductos(items.map((i) => i.categoryKind), count)}`
+                : "Carrito vacío"}
             </h2>
           </div>
           <button
@@ -241,9 +245,10 @@ export default function CartDrawer({
                   className="flex gap-3 rounded-2xl border-2 border-ink/12 bg-white/70 p-3"
                 >
                   <div className="grid h-20 w-14 shrink-0 place-items-center rounded-xl bg-roa-100">
-                    <CupArt
+                    <ProductArt
                       name={item.name}
                       categorySlug={item.categorySlug}
+                      kind={item.categoryKind}
                       className="h-16"
                       animated={false}
                     />
@@ -518,7 +523,7 @@ export default function CartDrawer({
                 key={h.id}
                 className="mb-2 rounded-xl border-2 border-dashed border-roa-500 bg-roa-100 px-3 py-2 text-sm font-bold text-roa-700"
               >
-                Agrega {h.missing} {h.missing === 1 ? "bebida" : "bebidas"} más de{" "}
+                Agrega {h.missing} más de{" "}
                 {h.title} y se te aplica el {h.label}
               </p>
             ))}

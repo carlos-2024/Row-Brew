@@ -1,3 +1,4 @@
+import { nombreProductos } from "@/lib/format";
 import type { Metadata } from "next";
 import MenuExplorer from "@/components/MenuExplorer";
 import BobaField from "@/components/BobaField";
@@ -39,7 +40,8 @@ export default async function CartaPage() {
             <span className="text-mango">MENÚ</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg text-cream/65">
-            {total} bebidas entre té, matcha y café de especialidad. Toca{" "}
+            {total} {nombreProductos(categories.map((c) => c.kind), total)} entre té,
+            matcha, café de especialidad y algo para acompañar. Toca{" "}
             <strong className="text-cream">Agregar</strong> para armar tu pedido y
             envíalo por WhatsApp en un toque.
           </p>

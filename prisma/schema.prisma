@@ -15,6 +15,10 @@ model Category {
   slug        String    @unique
   tagline     String? // "Té frío + Fruta + bobas"
   description String?
+  /// Qué se sirve en esta familia: bebida | comida | postre.
+  /// Decide cómo se dibuja el producto cuando no tiene foto — un vaso no
+  /// sirve para un cheesecake — y cómo se le llama en la carta.
+  kind        String    @default("bebida")
   /// Tema visual de la sección: green | cream | black | purple
   theme       String    @default("green")
   emoji       String    @default("🧋")

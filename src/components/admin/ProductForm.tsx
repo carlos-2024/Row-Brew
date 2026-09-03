@@ -46,7 +46,7 @@ export default function ProductForm({
     <form action={action} className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
       {product && <input type="hidden" name="id" value={product.id} />}
 
-      <Panel title={product ? "Editar bebida" : "Nueva bebida"}>
+      <Panel title={product ? "Editar producto" : "Nuevo producto"}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nombre" className="sm:col-span-2">
             <input
@@ -123,7 +123,7 @@ export default function ProductForm({
             <input
               name="imageUrl"
               defaultValue={product?.imageUrl ?? ""}
-              placeholder="https://… o /img/mi-bebida.png"
+              placeholder="https://… o /img/mi-producto.png"
               className={inputClass}
             />
           </Field>

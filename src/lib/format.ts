@@ -60,3 +60,25 @@ export const DELIVERY_LABELS: Record<string, string> = {
   delivery: "Delivery",
   evento: "Evento / corporativo",
 };
+
+/**
+ * Cómo llamar a lo que se vende, según lo que haya.
+ *
+ * La carta empezó siendo solo bebidas y el texto lo decía en todas partes.
+ * Al entrar comidas y postres, "42 bebidas" pasó a ser falso; pero cambiarlo
+ * a "productos" siempre suena a inventario. Así que se dice lo específico
+ * cuando todo es de un tipo, y lo genérico solo cuando hay mezcla.
+ */
+export function nombreProductos(kinds: string[], cantidad = 2): string {
+  const unicos = new Set(kinds);
+  const plural = cantidad !== 1;
+
+  if (unicos.size === 1) {
+    const [k] = [...unicos];
+    if (k === "comida") return plural ? "platos" : "plato";
+    if (k === "postre") return plural ? "postres" : "postre";
+    return plural ? "bebidas" : "bebida";
+  }
+
+  return plural ? "productos" : "producto";
+}
