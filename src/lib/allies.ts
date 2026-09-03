@@ -50,7 +50,7 @@ export async function getAllies(): Promise<AllyView[]> {
         products: {
           where: { active: true },
           orderBy: [{ position: "asc" }, { name: "asc" }],
-          include: { category: { select: { slug: true, name: true } } },
+          include: { category: { select: { slug: true, name: true, kind: true } } },
         },
       },
     });
@@ -82,6 +82,7 @@ export async function getAllies(): Promise<AllyView[]> {
         promoEligible: p.promoEligible,
         categorySlug: p.category.slug,
         categoryName: p.category.name,
+        categoryKind: p.category.kind,
       })),
     }));
   } catch {

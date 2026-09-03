@@ -13,6 +13,7 @@ import type { CartExtra, CartItem, MenuProduct } from "@/lib/types";
 import { priceCart, type PriceBreakdown, type PromoRule } from "@/lib/pricing";
 
 const STORAGE_KEY = "roabrew.cart.v1";
+const PROMOS_KEY = "roabrew.combos.v1";
 
 type CartContext = {
   items: CartItem[];
@@ -28,6 +29,9 @@ type CartContext = {
   setQuantity: (key: string, quantity: number) => void;
   remove: (key: string) => void;
   clear: () => void;
+  /** Promos que el cliente armó a propósito desde su tarjeta */
+  chosenPromos: PromoRule[];
+  chooseCombo: (promo: PromoRule) => void;
 };
 
 const Ctx = createContext<CartContext | null>(null);
@@ -48,6 +52,14 @@ export function CartProvider({
   const [open, setOpen] = useState(false);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  /**
+   * Combos que el cliente armó desde la tarjeta de la promo.
+   *
+   * Se guardan aparte de las bebidas porque son una intención, no un
+   * producto: dicen "quiero el 2x22", y eso es lo que habilita ese precio
+   * aunque la promo no esté marcada para cobrarse sola.
+   */
+  const [chosenPromos, setChosenPromos] = useState<PromoRule[]>([]);
 
   // Cargar del localStorage al montar
   useEffect(() => {
@@ -62,6 +74,12 @@ export function CartProvider({
     } catch {
       /* carrito corrupto: se ignora */
     }
+    try {
+      const raw = localStorage.getItem(PROMOS_KEY);
+      if (raw) setChosenPromos(JSON.parse(raw) as PromoRule[]);
+    } catch {
+      /* combos corruptos: se ignoran */
+    }
     setHydrated(true);
   }, []);
 
@@ -70,10 +88,11 @@ export function CartProvider({
     if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(PROMOS_KEY, JSON.stringify(chosenPromos));
     } catch {
       /* sin espacio: no es crítico */
     }
-  }, [items, hydrated]);
+  }, [items, chosenPromos, hydrated]);
 
   // Bloquear el scroll del body con el drawer abierto
   useEffect(() => {
@@ -103,6 +122,7 @@ export function CartProvider({
             quantity,
             extras,
             categorySlug: product.categorySlug,
+            categoryKind: product.categoryKind,
             promoEligible: product.promoEligible,
           },
         ];
@@ -125,7 +145,27 @@ export function CartProvider({
     setItems((prev) => prev.filter((i) => i.key !== key));
   }, []);
 
-  const clear = useCallback(() => setItems([]), []);
+  const chooseCombo = useCallback((promo: PromoRule) => {
+    setChosenPromos((prev) =>
+      prev.some((p) => p.id === promo.id) ? prev : [...prev, promo]
+    );
+  }, []);
+
+  const clear = useCallback(() => {
+    setItems([]);
+    setChosenPromos([]);
+  }, []);
+
+  // Si el cliente vacía las bebidas de una categoría, su combo deja de
+  // tener sentido y se olvida; si no, reaparecería al volver a agregar una.
+  useEffect(() => {
+    setChosenPromos((prev) => {
+      const vigentes = prev.filter((promo) =>
+        items.some((i) => i.categorySlug === promo.categorySlug)
+      );
+      return vigentes.length === prev.length ? prev : vigentes;
+    });
+  }, [items]);
 
   const count = useMemo(
     () => items.reduce((sum, i) => sum + i.quantity, 0),
@@ -136,15 +176,19 @@ export function CartProvider({
     () =>
       priceCart(
         items.map((i) => ({
+          productId: i.productId,
           basePrice: i.price,
           extrasTotal: i.extras.reduce((s, e) => s + e.price, 0),
           quantity: i.quantity,
           categorySlug: i.categorySlug,
           promoEligible: i.promoEligible ?? true,
         })),
-        promos
+        // Primero los que el cliente armó: onePromoPerCategory se queda con
+        // el primero de cada categoría, así su elección gana sobre la
+        // promo que el panel tenga marcada para cobrarse sola.
+        [...chosenPromos, ...promos]
       ),
-    [items, promos]
+    [items, promos, chosenPromos]
   );
 
   const value: CartContext = {
@@ -159,6 +203,8 @@ export function CartProvider({
     setQuantity,
     remove,
     clear,
+    chosenPromos,
+    chooseCombo,
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

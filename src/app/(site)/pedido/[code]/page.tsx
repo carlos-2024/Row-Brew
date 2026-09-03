@@ -6,7 +6,7 @@ import { money, toNumber, DELIVERY_LABELS, STATUS_LABELS, formatDate } from "@/l
 import BobaField from "@/components/BobaField";
 import { Sparkle } from "@/components/Leaf";
 import { BobaIcon, WhatsAppIcon } from "@/components/Icons";
-import CupArt from "@/components/CupArt";
+import ProductArt from "@/components/ProductArt";
 
 export const dynamic = "force-dynamic";
 
@@ -72,9 +72,10 @@ export default async function PedidoPage({
               return (
                 <li key={item.id} className="flex items-center gap-4 py-4">
                   <div className="grid h-16 w-12 shrink-0 place-items-center rounded-xl bg-roa-100">
-                    <CupArt
+                    <ProductArt
                       name={item.name}
                       categorySlug={item.product?.category?.slug ?? "sparkling-tea"}
+                      kind={item.product?.category?.kind ?? "bebida"}
                       className="h-14"
                       animated={false}
                     />

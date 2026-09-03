@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { orderCode, toNumber } from "@/lib/format";
 import { getSettings } from "@/lib/settings";
-import { getAutoPromos } from "@/lib/menu";
+import { getAutoPromos, getPromoRulesByIds } from "@/lib/menu";
 import { priceCart, type PriceableItem } from "@/lib/pricing";
 import { classify, getZones } from "@/lib/coverage";
 import { eventCode, toUtcDate, todayUtc } from "@/lib/events";
@@ -32,6 +32,8 @@ type Body = {
   eventDate?: string;
   eventType?: string;
   items?: IncomingItem[];
+  /** Promos que el cliente armó desde su tarjeta, solo los identificadores */
+  promoIds?: string[];
 };
 
 const DELIVERY_TEXT: Record<string, string> = {
@@ -160,6 +162,7 @@ export async function POST(request: Request) {
       const lineTotal = unitPrice * quantity;
 
       priceable.push({
+        productId: product.id,
         basePrice,
         extrasTotal,
         quantity,
@@ -185,7 +188,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const pricing = priceCart(priceable, promos);
+    // Los combos que el cliente armó a propósito mandan sobre los
+    // automáticos: priceCart deja una promo por categoría y se queda con la
+    // primera de la lista.
+    const elegidas = await getPromoRulesByIds(
+      Array.isArray(body.promoIds) ? body.promoIds : []
+    );
+
+    const pricing = priceCart(priceable, [...elegidas, ...promos]);
 
     // ── Zona de envío: se recalcula acá, no se acepta la del navegador ──
     let deliveryZone: string | null = null;

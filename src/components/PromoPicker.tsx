@@ -1,8 +1,9 @@
 "use client";
 
+import { nombreProductos } from "@/lib/format";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import CupArt from "@/components/CupArt";
+import ProductArt from "@/components/ProductArt";
 import { useCart } from "@/components/cart/CartProvider";
 import { Sparkle } from "@/components/Leaf";
 import type { PromoView } from "@/lib/types";
@@ -11,9 +12,12 @@ import type { PromoView } from "@/lib/types";
  * Arma un combo de promoción.
  *
  * El cliente elige con qué bebidas quiere completarlo y se agregan sueltas al
- * carrito. El descuento no se calcula acá: lo aplica `priceCart` al ver que
- * hay suficientes bebidas de esa categoría, igual que si las hubiera elegido
- * una por una desde la carta. Así el precio es el mismo por cualquier camino.
+ * carrito, junto con la promo elegida. El descuento no se calcula acá: lo
+ * aplica `priceCart`, y el servidor lo recalcula al recibir el pedido.
+ *
+ * Armar el combo a propósito basta para que se cobre su precio, aunque la
+ * promo no esté marcada como "cobra sola" en el panel: ese ajuste decide si
+ * se aplica al juntar bebidas sueltas, que es otra cosa.
  */
 export default function PromoPicker({
   promo,
@@ -22,7 +26,7 @@ export default function PromoPicker({
   promo: PromoView;
   currency: string;
 }) {
-  const { add, setOpen } = useCart();
+  const { add, setOpen, chooseCombo } = useCart();
   const [abierto, setAbierto] = useState(false);
   const [montado, setMontado] = useState(false);
   const [elegidas, setElegidas] = useState<Record<string, number>>({});
@@ -56,16 +60,28 @@ export default function PromoPicker({
   }
 
   function agregar() {
+    if (!promo.categorySlug) return;
+
     for (const [id, cantidad] of Object.entries(elegidas)) {
       const producto = promo.products.find((p) => p.id === id);
       if (producto) add(producto, [], cantidad);
     }
+
+    chooseCombo({
+      id: promo.id,
+      title: promo.title,
+      label: promo.label,
+      categorySlug: promo.categorySlug,
+      quantity: promo.quantity,
+      price: promo.price,
+    });
     setElegidas({});
     setAbierto(false);
     setOpen(true); // se abre el carrito para que vea el descuento aplicado
   }
 
-  if (!promo.autoApply || promo.products.length === 0) return null;
+  // Sin categoría no hay bebidas que ofrecer ni precio que aplicar
+  if (!promo.categorySlug || promo.products.length === 0) return null;
 
   return (
     <>
@@ -114,7 +130,7 @@ export default function PromoPicker({
               <div className="px-6 py-5">
                 <p className="mb-4 text-sm font-bold text-roa-700">
                   {faltan > 0
-                    ? `Elige ${faltan} bebida${faltan > 1 ? "s" : ""} más`
+                    ? `Elige ${faltan} ${nombreProductos(promo.products.map((p) => p.categoryKind), faltan)} más`
                     : "¡Combo completo!"}
                   <span className="ml-2 font-normal text-ink/45">
                     {total} de {promo.quantity}
@@ -136,9 +152,10 @@ export default function PromoPicker({
                         } ${lleno ? "opacity-40" : ""}`}
                       >
                         <div className="grid h-14 w-11 shrink-0 place-items-center rounded-xl bg-roa-200">
-                          <CupArt
+                          <ProductArt
                             name={p.name}
                             categorySlug={p.categorySlug}
+                            kind={p.categoryKind}
                             className="h-12"
                             animated={false}
                           />

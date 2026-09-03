@@ -7,6 +7,7 @@ import {
   Panel,
   Toggle,
   THEME_OPTIONS,
+  KIND_OPTIONS,
   inputClass,
 } from "@/components/admin/ui";
 import { CategoryIcon } from "@/components/Icons";
@@ -50,6 +51,16 @@ export default async function CategoriasPage() {
                     defaultValue={cat.position}
                     className={inputClass}
                   />
+                </Field>
+
+                <Field label="Qué sirve" className="sm:col-span-1">
+                  <select name="kind" defaultValue={cat.kind} className={inputClass}>
+                    {KIND_OPTIONS.map((k) => (
+                      <option key={k.value} value={k.value}>
+                        {k.label}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
                 <Field label="Tema" className="sm:col-span-1">
@@ -129,6 +140,15 @@ export default async function CategoriasPage() {
                 rows={3}
                 className={`${inputClass} resize-none`}
               />
+            </Field>
+            <Field label="Qué sirve" hint="decide el dibujo y cómo se le llama">
+              <select name="kind" defaultValue="bebida" className={inputClass}>
+                {KIND_OPTIONS.map((k) => (
+                  <option key={k.value} value={k.value}>
+                    {k.label}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Tema visual">
               <select name="theme" defaultValue="green" className={inputClass}>

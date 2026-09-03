@@ -17,9 +17,16 @@ export type PromoRule = {
   quantity: number;
   /** Precio total del combo */
   price: number;
+  /**
+   * Bebidas concretas que entran. Vacío o ausente significa "todas las de
+   * la categoría": una categoría puede tener varias promos distintas y el
+   * 2x22 de matchas frutados no cubre a todos los matchas.
+   */
+  productIds?: string[];
 };
 
 export type PriceableItem = {
+  productId: string;
   /** Precio de lista del producto, sin extras */
   basePrice: number;
   /** Suma de los extras de UNA unidad */
@@ -93,9 +100,15 @@ export function priceCart(
     // Cada unidad cuenta por separado: 2 unidades del mismo producto también
     // arman combo. Solo se considera el precio base; los extras se cobran
     // siempre aparte.
+    const soloEstas =
+      promo.productIds && promo.productIds.length > 0
+        ? new Set(promo.productIds)
+        : null;
+
     const units: number[] = [];
     for (const item of items) {
       if (item.categorySlug !== promo.categorySlug || !item.promoEligible) continue;
+      if (soloEstas && !soloEstas.has(item.productId)) continue;
       for (let i = 0; i < item.quantity; i++) units.push(item.basePrice);
     }
 

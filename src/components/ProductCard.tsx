@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import CupArt from "@/components/CupArt";
+import ProductArt from "@/components/ProductArt";
 import { useCart } from "@/components/cart/CartProvider";
 import type { CartExtra, MenuExtra, MenuProduct } from "@/lib/types";
 
@@ -66,9 +66,10 @@ export default function ProductCard({ product, extras, currency, index = 0 }: Pr
             loading="lazy"
           />
         ) : (
-          <CupArt
+          <ProductArt
             name={product.name}
             categorySlug={product.categorySlug}
+            kind={product.categoryKind}
             className="relative h-36 transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:scale-105"
           />
         )}

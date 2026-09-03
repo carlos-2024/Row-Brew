@@ -14,11 +14,21 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function PromosPage() {
-  const [promos, categories] = await Promise.all([
-    prisma.promo.findMany({ orderBy: { position: "asc" } }),
+  const [promos, categories, productos] = await Promise.all([
+    prisma.promo.findMany({
+      orderBy: { position: "asc" },
+      include: { products: { select: { id: true } } },
+    }),
     prisma.category.findMany({
       orderBy: { position: "asc" },
       select: { id: true, name: true, emoji: true },
+    }),
+    // Para marcar cuáles entran en cada promo. Las bebidas de aliados no
+    // salen en la carta, así que tampoco entran en promociones.
+    prisma.product.findMany({
+      where: { active: true, allyId: null },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
+      select: { id: true, name: true, price: true, categoryId: true },
     }),
   ]);
 
@@ -124,18 +134,55 @@ export default async function PromosPage() {
                   />
                 </div>
 
+                {(() => {
+                  const suyas = productos.filter(
+                    (prod) => prod.categoryId === promo.categoryId
+                  );
+                  if (suyas.length === 0) return null;
+                  const marcadas = new Set(promo.products.map((prod) => prod.id));
+
+                  return (
+                    <Field
+                      label="Bebidas que entran"
+                      className="sm:col-span-6"
+                      hint="sin marcar ninguna entran todas las de la categoría"
+                    >
+                      <div className="grid max-h-56 gap-1 overflow-y-auto rounded-xl border-2 border-cream/12 p-2 sm:grid-cols-2">
+                        {suyas.map((prod) => (
+                          <label
+                            key={prod.id}
+                            className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition hover:bg-cream/8"
+                          >
+                            <input
+                              type="checkbox"
+                              name="productIds"
+                              value={prod.id}
+                              defaultChecked={marcadas.has(prod.id)}
+                              className="h-4 w-4 shrink-0 accent-roa-500"
+                            />
+                            <span className="min-w-0 flex-1 truncate">{prod.name}</span>
+                            <span className="shrink-0 text-cream/40">
+                              S/ {toNumber(prod.price).toFixed(2)}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </Field>
+                  );
+                })()}
+
                 <div className="flex items-end gap-2 sm:col-span-2">
                   <Button variant="primary">Guardar</Button>
                 </div>
 
-                {promo.autoApply && (
-                  <p className="sm:col-span-6 rounded-xl border-2 border-roa-500/40 bg-roa-500/10 px-3 py-2 text-xs text-roa-300">
-                    Al juntar {promo.quantity} bebidas de esta categoría, el carrito
-                    cobra {promo.price.toString()} en vez de la suma suelta. Puedes
-                    excluir bebidas puntuales desde el interruptor
-                    <strong> Entra en la promo</strong> de cada producto.
-                  </p>
-                )}
+                <p className="sm:col-span-6 rounded-xl border-2 border-roa-500/40 bg-roa-500/10 px-3 py-2 text-xs leading-relaxed text-roa-300">
+                  En el sitio, esta promo siempre muestra el botón
+                  <strong> Armar mi {promo.label}</strong>: el cliente elige sus
+                  {" "}{promo.quantity} bebidas y paga {promo.price.toString()}.
+                  {promo.autoApply
+                    ? " Además, por tener activado Cobrar sola, ese precio también se aplica cuando junta esas bebidas una por una desde la carta."
+                    : " Con Cobrar sola apagado, quien las agregue sueltas desde la carta paga el precio normal de cada una."}
+                </p>
               </form>
 
               <form action={deletePromo} className="mt-3 border-t-2 border-cream/8 pt-3">
