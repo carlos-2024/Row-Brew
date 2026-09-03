@@ -13,6 +13,8 @@ export type MenuProduct = {
   categoryName: string;
   /** bebida | comida | postre, heredado de su familia */
   categoryKind: string;
+  /** Grupos de opcionales propios. Ausente: solo los extras sueltos. */
+  extraGroups?: MenuExtraGroup[];
 };
 
 export type MenuCategory = {
@@ -63,6 +65,16 @@ export type MenuExtra = {
   id: string;
   name: string;
   price: number;
+};
+
+/** Grupo de opcionales que ofrece un producto: "Leche", "Boba"… */
+export type MenuExtraGroup = {
+  id: string;
+  name: string;
+  hint: string | null;
+  /** 0 es sin límite; 1 hace que elegir una desmarque la anterior */
+  maxChoices: number;
+  extras: MenuExtra[];
 };
 
 export type PromoView = {

@@ -17,6 +17,7 @@ import {
   EyeIcon,
   HandshakeIcon,
   CalendarIcon,
+  SlidersIcon,
 } from "@/components/Icons";
 
 const LINKS = [
@@ -26,6 +27,7 @@ const LINKS = [
   { href: "/admin/eventos", label: "Eventos", Icon: CalendarIcon },
   { href: "/admin/productos", label: "Productos", Icon: BobaIcon },
   { href: "/admin/categorias", label: "Categorías", Icon: FolderIcon },
+  { href: "/admin/extras", label: "Opcionales", Icon: SlidersIcon },
   { href: "/admin/promos", label: "Promos", Icon: TagIcon },
   { href: "/admin/aliados", label: "Aliados", Icon: HandshakeIcon },
   { href: "/admin/fidelidad", label: "Fidelidad", Icon: PawIcon },

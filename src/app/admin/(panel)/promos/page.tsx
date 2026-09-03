@@ -23,12 +23,14 @@ export default async function PromosPage() {
       orderBy: { position: "asc" },
       select: { id: true, name: true, emoji: true },
     }),
-    // Para marcar cuáles entran en cada promo. Las bebidas de aliados no
-    // salen en la carta, así que tampoco entran en promociones.
+    // Las que el propio producto declara aptas con "Entra en promociones".
+    // No se exige que esté visible en la carta: una bebida puede venderse
+    // solo dentro de una promo. Las de aliados sí quedan fuera, porque se
+    // venden desde la página de su marca.
     prisma.product.findMany({
-      where: { active: true, allyId: null },
+      where: { promoEligible: true, allyId: null },
       orderBy: [{ position: "asc" }, { name: "asc" }],
-      select: { id: true, name: true, price: true, categoryId: true },
+      select: { id: true, name: true, price: true, categoryId: true, active: true },
     }),
   ]);
 
@@ -138,7 +140,15 @@ export default async function PromosPage() {
                   const suyas = productos.filter(
                     (prod) => prod.categoryId === promo.categoryId
                   );
-                  if (suyas.length === 0) return null;
+                  if (suyas.length === 0) {
+                    return (
+                      <p className="sm:col-span-6 rounded-xl border-2 border-cream/12 px-3 py-2 text-xs text-cream/45">
+                        Ninguna bebida de esta familia tiene activado
+                        <strong> Entra en promociones</strong>. Actívalo en la ficha
+                        del producto para poder elegirla aquí.
+                      </p>
+                    );
+                  }
                   const marcadas = new Set(promo.products.map((prod) => prod.id));
 
                   return (
@@ -160,7 +170,14 @@ export default async function PromosPage() {
                               defaultChecked={marcadas.has(prod.id)}
                               className="h-4 w-4 shrink-0 accent-roa-500"
                             />
-                            <span className="min-w-0 flex-1 truncate">{prod.name}</span>
+                            <span className="min-w-0 flex-1 truncate">
+                              {prod.name}
+                              {!prod.active && (
+                                <span className="ml-1.5 rounded-full bg-cream/10 px-1.5 py-0.5 text-[10px] font-bold text-cream/50">
+                                  fuera de la carta
+                                </span>
+                              )}
+                            </span>
                             <span className="shrink-0 text-cream/40">
                               S/ {toNumber(prod.price).toFixed(2)}
                             </span>

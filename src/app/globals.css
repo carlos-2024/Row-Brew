@@ -114,9 +114,11 @@
   50%      { transform: scale(1.06); box-shadow: 0 0 0 12px transparent; }
 }
 
+/* El vaivén es corto a propósito: la onda es la superficie del líquido,
+   y un recorrido largo la despega de las paredes del vaso. */
 @keyframes liquid {
-  0%, 100% { transform: translateX(-4%) translateY(0) rotate(0deg); }
-  50%      { transform: translateX(4%) translateY(-3px) rotate(1.5deg); }
+  0%, 100% { transform: translateX(-2%) translateY(0) rotate(0deg); }
+  50%      { transform: translateX(2%) translateY(-2px) rotate(0.7deg); }
 }
 
 /* ─────────────────────────── Base ─────────────────────────── */
@@ -271,7 +273,7 @@
   }
 
   /* Vaso animado: el líquido se mece */
-  .liquid { animation: liquid 5.5s ease-in-out infinite; }
+  .liquid { animation: liquid 7s ease-in-out infinite; }
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

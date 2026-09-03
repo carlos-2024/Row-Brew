@@ -127,8 +127,22 @@ export async function POST(request: Request) {
     const productIds = [...new Set(items.map((i) => i.productId))];
     const [products, dbExtras, settings, promos] = await Promise.all([
       prisma.product.findMany({
-        where: { id: { in: productIds }, active: true },
-        include: { category: { select: { slug: true } } },
+        where: {
+          id: { in: productIds },
+          OR: [
+            { active: true },
+            // Fuera de la carta pero dentro de una promo vigente: así se
+            // venden las bebidas que solo existen como parte de un combo.
+            { promos: { some: { active: true } } },
+          ],
+        },
+        include: {
+          category: { select: { slug: true } },
+          extraGroups: {
+            where: { active: true },
+            include: { extras: { where: { active: true }, select: { name: true } } },
+          },
+        },
       }),
       prisma.extra.findMany({ where: { active: true } }),
       getSettings(),
@@ -136,8 +150,20 @@ export async function POST(request: Request) {
     ]);
 
     const productById = new Map(products.map((p) => [p.id, p]));
-    const extraByName = new Map(
+
+    // Precio de todos los opcionales, agrupados o no
+    const extrasPorNombre = new Map(
       dbExtras.map((e) => [e.name.toLowerCase(), toNumber(e.price)])
+    );
+    // Cómo está escrito de verdad, para no guardar lo que mandó el navegador
+    const nombreReal = new Map(dbExtras.map((e) => [e.name.toLowerCase(), e.name]));
+    // Los sueltos valen para cualquier producto; los agrupados solo para el
+    // suyo, porque ofrecer "Shot extra de cold brew" en un matcha no tiene
+    // sentido y aceptarlo cobraría de más.
+    const extraByName = new Map(
+      dbExtras
+        .filter((e) => e.groupId === null)
+        .map((e) => [e.name.toLowerCase(), toNumber(e.price)])
     );
 
     const lines = [];
@@ -149,12 +175,23 @@ export async function POST(request: Request) {
 
       const quantity = Math.max(1, Math.min(50, Math.floor(item.quantity) || 1));
 
+      // Precio de cada opcional: primero los del propio producto, luego los
+      // sueltos. Lo que no esté en ninguno de los dos se descarta.
+      const suyos = new Map<string, number>();
+      for (const grupo of product.extraGroups) {
+        for (const e of grupo.extras) {
+          const fila = extrasPorNombre.get(e.name.toLowerCase());
+          if (fila !== undefined) suyos.set(e.name.toLowerCase(), fila);
+        }
+      }
+
       const extras = (item.extras ?? [])
-        .map((e) => ({
-          name: e.name,
-          price: extraByName.get(e.name.toLowerCase()) ?? 0,
-        }))
-        .filter((e) => extraByName.has(e.name.toLowerCase()));
+        .map((e) => e.name.toLowerCase())
+        .filter((n) => suyos.has(n) || extraByName.has(n))
+        .map((n) => ({
+          name: nombreReal.get(n) ?? n,
+          price: suyos.get(n) ?? extraByName.get(n) ?? 0,
+        }));
 
       const extrasTotal = extras.reduce((s, e) => s + e.price, 0);
       const basePrice = toNumber(product.price);
