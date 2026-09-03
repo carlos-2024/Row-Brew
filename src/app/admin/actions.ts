@@ -180,10 +180,19 @@ export async function savePromo(formData: FormData) {
     categoryId: str(formData, "categoryId") || null,
   };
 
+  // Bebidas que entran en la promo. Sin ninguna marcada entran todas las de
+  // la categoría, que es como se comportaba antes de poder elegirlas.
+  const productIds = formData.getAll("productIds").map(String).filter(Boolean);
+
   if (id) {
-    await prisma.promo.update({ where: { id }, data });
+    await prisma.promo.update({
+      where: { id },
+      data: { ...data, products: { set: productIds.map((pid) => ({ id: pid })) } },
+    });
   } else {
-    await prisma.promo.create({ data });
+    await prisma.promo.create({
+      data: { ...data, products: { connect: productIds.map((pid) => ({ id: pid })) } },
+    });
   }
 
   refresh();

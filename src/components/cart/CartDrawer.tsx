@@ -45,7 +45,7 @@ export default function CartDrawer({
   deliveryNote,
   eventTypes,
 }: Props) {
-  const { items, count, pricing, open, setOpen, setQuantity, remove, clear } =
+  const { items, count, pricing, open, setOpen, setQuantity, remove, clear, chosenPromos } =
     useCart();
   const router = useRouter();
 
@@ -149,6 +149,8 @@ export default function CartDrawer({
           address: direccion?.label ?? "",
           lat: direccion?.lat ?? undefined,
           lng: direccion?.lng ?? undefined,
+          // Solo los ids: el servidor lee de la base el precio del combo
+          promoIds: chosenPromos.map((p) => p.id),
           items: items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,

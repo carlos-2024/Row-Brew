@@ -11,9 +11,12 @@ import type { PromoView } from "@/lib/types";
  * Arma un combo de promoción.
  *
  * El cliente elige con qué bebidas quiere completarlo y se agregan sueltas al
- * carrito. El descuento no se calcula acá: lo aplica `priceCart` al ver que
- * hay suficientes bebidas de esa categoría, igual que si las hubiera elegido
- * una por una desde la carta. Así el precio es el mismo por cualquier camino.
+ * carrito, junto con la promo elegida. El descuento no se calcula acá: lo
+ * aplica `priceCart`, y el servidor lo recalcula al recibir el pedido.
+ *
+ * Armar el combo a propósito basta para que se cobre su precio, aunque la
+ * promo no esté marcada como "cobra sola" en el panel: ese ajuste decide si
+ * se aplica al juntar bebidas sueltas, que es otra cosa.
  */
 export default function PromoPicker({
   promo,
@@ -22,7 +25,7 @@ export default function PromoPicker({
   promo: PromoView;
   currency: string;
 }) {
-  const { add, setOpen } = useCart();
+  const { add, setOpen, chooseCombo } = useCart();
   const [abierto, setAbierto] = useState(false);
   const [montado, setMontado] = useState(false);
   const [elegidas, setElegidas] = useState<Record<string, number>>({});
@@ -56,16 +59,28 @@ export default function PromoPicker({
   }
 
   function agregar() {
+    if (!promo.categorySlug) return;
+
     for (const [id, cantidad] of Object.entries(elegidas)) {
       const producto = promo.products.find((p) => p.id === id);
       if (producto) add(producto, [], cantidad);
     }
+
+    chooseCombo({
+      id: promo.id,
+      title: promo.title,
+      label: promo.label,
+      categorySlug: promo.categorySlug,
+      quantity: promo.quantity,
+      price: promo.price,
+    });
     setElegidas({});
     setAbierto(false);
     setOpen(true); // se abre el carrito para que vea el descuento aplicado
   }
 
-  if (!promo.autoApply || promo.products.length === 0) return null;
+  // Sin categoría no hay bebidas que ofrecer ni precio que aplicar
+  if (!promo.categorySlug || promo.products.length === 0) return null;
 
   return (
     <>
