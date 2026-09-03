@@ -127,7 +127,15 @@ export async function POST(request: Request) {
     const productIds = [...new Set(items.map((i) => i.productId))];
     const [products, dbExtras, settings, promos] = await Promise.all([
       prisma.product.findMany({
-        where: { id: { in: productIds }, active: true },
+        where: {
+          id: { in: productIds },
+          OR: [
+            { active: true },
+            // Fuera de la carta pero dentro de una promo vigente: así se
+            // venden las bebidas que solo existen como parte de un combo.
+            { promos: { some: { active: true } } },
+          ],
+        },
         include: { category: { select: { slug: true } } },
       }),
       prisma.extra.findMany({ where: { active: true } }),

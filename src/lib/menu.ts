@@ -63,9 +63,10 @@ export async function getPromos(): Promise<PromoView[]> {
       where: { active: true },
       orderBy: { position: "asc" },
       include: {
-        // Bebidas elegidas para esta promo en concreto
+        // Bebidas elegidas para esta promo en concreto. Sin exigir active:
+        // elegirla a mano ya es decir que se vende, aunque no salga en la carta.
         products: {
-          where: { active: true, allyId: null },
+          where: { allyId: null },
           orderBy: [{ position: "asc" }, { name: "asc" }],
         },
         category: {
