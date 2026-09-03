@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { getSettings } from "@/lib/settings";
 import { toNumber } from "@/lib/format";
 import {
   saveExtra,
   deleteExtra,
   saveExtraGroup,
   deleteExtraGroup,
-  linkExtraGroupProducts,
 } from "@/app/admin/actions";
 import {
   AdminHeader,
@@ -15,6 +15,7 @@ import {
   Toggle,
   inputClass,
 } from "@/components/admin/ui";
+import LinkProducts from "@/components/admin/LinkProducts";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export const dynamic = "force-dynamic";
  * hay ninguno fijo en el código, porque cada carta necesita los suyos.
  */
 export default async function ExtrasPage() {
-  const [grupos, sueltos, productos] = await Promise.all([
+  const [grupos, sueltos, filas, settings] = await Promise.all([
     prisma.extraGroup.findMany({
       orderBy: { position: "asc" },
       include: {
@@ -44,11 +45,24 @@ export default async function ExtrasPage() {
       select: {
         id: true,
         name: true,
+        price: true,
         active: true,
-        category: { select: { name: true } },
+        category: { select: { name: true, slug: true, kind: true } },
       },
     }),
+    getSettings(),
   ]);
+
+  // Se aplana acá para no mandarle a un componente de cliente objetos de Prisma
+  const productos = filas.map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: toNumber(p.price),
+    active: p.active,
+    categoryName: p.category.name,
+    categorySlug: p.category.slug,
+    categoryKind: p.category.kind,
+  }));
 
   return (
     <>
@@ -202,48 +216,13 @@ export default async function ExtrasPage() {
                   </form>
                 </div>
 
-                {/* Productos que lo ofrecen */}
-                <form
-                  action={linkExtraGroupProducts}
-                  className="mt-5 border-t-2 border-cream/8 pt-4"
-                >
-                  <input type="hidden" name="id" value={grupo.id} />
-                  <p className="text-xs font-bold uppercase tracking-wider text-cream/40">
-                    Productos que lo ofrecen ({vinculados.size})
-                  </p>
-
-                  <div className="mt-2 grid max-h-60 gap-1 overflow-y-auto rounded-xl border-2 border-cream/12 p-2 sm:grid-cols-2">
-                    {productos.map((prod) => (
-                      <label
-                        key={prod.id}
-                        className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition hover:bg-cream/8"
-                      >
-                        <input
-                          type="checkbox"
-                          name="productIds"
-                          value={prod.id}
-                          defaultChecked={vinculados.has(prod.id)}
-                          className="h-4 w-4 shrink-0 accent-roa-500"
-                        />
-                        <span className="min-w-0 flex-1 truncate">
-                          {prod.name}
-                          {!prod.active && (
-                            <span className="ml-1.5 text-[10px] text-cream/40">
-                              fuera de la carta
-                            </span>
-                          )}
-                        </span>
-                        <span className="shrink-0 text-xs text-cream/35">
-                          {prod.category.name}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-
-                  <div className="mt-3">
-                    <Button variant="primary">Vincular productos</Button>
-                  </div>
-                </form>
+                <LinkProducts
+                  grupoId={grupo.id}
+                  grupoNombre={grupo.name}
+                  productos={productos}
+                  vinculados={grupo.products.map((p) => p.id)}
+                  currency={settings.currency}
+                />
 
                 <form
                   action={deleteExtraGroup}
