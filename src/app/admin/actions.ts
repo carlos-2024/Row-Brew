@@ -90,13 +90,28 @@ export async function saveProduct(formData: FormData) {
     position: num(formData, "position"),
     categoryId,
     allyId: str(formData, "allyId") || null,
+
+    // ── SEO ── vacío significa "arma uno con el nombre y la descripción"
+    metaTitle: str(formData, "metaTitle") || null,
+    metaDescription: str(formData, "metaDescription") || null,
+    seoKeywords: str(formData, "seoKeywords") || null,
+    imageAlt: str(formData, "imageAlt") || null,
   };
 
+  // El slug se puede escribir a mano para tener una URL corta y buscada.
+  // Se normaliza igual y se comprueba que esté libre: dos productos con el
+  // mismo slug harían que uno se coma la página del otro.
+  const pedido = str(formData, "slug");
+
   if (id) {
-    await prisma.product.update({ where: { id }, data });
+    const slug = pedido ? await uniqueSlug(pedido, "product", id) : undefined;
+    await prisma.product.update({
+      where: { id },
+      data: slug ? { ...data, slug } : data,
+    });
   } else {
     await prisma.product.create({
-      data: { ...data, slug: await uniqueSlug(name, "product") },
+      data: { ...data, slug: await uniqueSlug(pedido || name, "product") },
     });
   }
 
@@ -406,6 +421,12 @@ export async function saveAlly(formData: FormData) {
     coverUrl: str(formData, "coverUrl") || null,
     position: num(formData, "position"),
     active: bool(formData, "active"),
+
+    // ── SEO ── vacío: se arma con el nombre y el tagline
+    metaTitle: str(formData, "metaTitle") || null,
+    metaDescription: str(formData, "metaDescription") || null,
+    seoKeywords: str(formData, "seoKeywords") || null,
+    imageAlt: str(formData, "imageAlt") || null,
   };
 
   if (id) {

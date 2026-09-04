@@ -13,7 +13,12 @@ function siempreAbierta(pathname: string): boolean {
     pathname.startsWith("/api/auth") ||
     // El contador tiene que funcionar sobre todo en modo lanzamiento: es
     // cuando interesa saber cuánta gente llega
-    pathname === "/api/visita"
+    pathname === "/api/visita" ||
+    // Los buscadores tienen que poder leer que no entren. Si robots.txt
+    // redirige a la cuenta regresiva, el rastreador no ve la prohibición y
+    // recorre igual.
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml"
   );
 }
 

@@ -58,7 +58,12 @@ export type AllyView = {
   logoUrl: string | null;
   coverUrl: string | null;
   images: AllyImageView[];
-  products: MenuProduct[];
+  products: MenuProduct[];
+  /** ── SEO ── lo que ve el buscador, aparte de lo que ve el cliente */
+  metaTitle: string | null;
+  metaDescription: string | null;
+  seoKeywords: string | null;
+  imageAlt: string | null;
 };
 
 export type MenuExtra = {

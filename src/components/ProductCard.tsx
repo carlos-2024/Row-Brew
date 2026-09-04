@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import ProductArt from "@/components/ProductArt";
 import { useCart } from "@/components/cart/CartProvider";
@@ -103,7 +104,14 @@ export default function ProductCard({ product, extras, currency, index = 0 }: Pr
 
       {/* Info */}
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-[1.35rem] leading-tight">{product.name}</h3>
+        <h3 className="font-display text-[1.35rem] leading-tight">
+          <Link
+            href={`/producto/${product.slug}`}
+            className="transition hover:text-roa-600"
+          >
+            {product.name}
+          </Link>
+        </h3>
         {product.description && (
           <p className="mt-1.5 flex-1 text-sm leading-snug text-ink/60">
             {product.description}
