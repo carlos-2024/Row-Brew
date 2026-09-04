@@ -61,6 +61,18 @@ model Product {
   extraGroups ExtraGroup[] @relation("ProductExtraGroups")
 
   orderItems  OrderItem[]
+  /// ── SEO ──
+  /// Lo que ve el buscador, aparte de lo que ve el cliente. Se guarda por
+  /// separado para poder escribir un titular largo y con ubicación sin
+  /// ensuciar el nombre corto que va en la carta.
+  /// Vacío: se arma con el nombre y la descripción.
+  metaTitle       String?
+  metaDescription String?
+  /// Palabras clave separadas por coma
+  seoKeywords     String?
+  /// Texto alternativo de la imagen, para lectores de pantalla y para Google
+  imageAlt        String?
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -157,6 +169,17 @@ model Ally {
 
   images   AllyImage[]
   products Product[]
+  /// ── SEO ──
+  /// Lo que ve el buscador, aparte de lo que ve el cliente. Se guarda por
+  /// separado para poder escribir un titular largo y con ubicación sin
+  /// ensuciar el nombre corto que va en la carta.
+  /// Vacío: se arma con el nombre y la descripción.
+  metaTitle       String?
+  metaDescription String?
+  /// Palabras clave separadas por coma
+  seoKeywords     String?
+  /// Texto alternativo de la imagen, para lectores de pantalla y para Google
+  imageAlt        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

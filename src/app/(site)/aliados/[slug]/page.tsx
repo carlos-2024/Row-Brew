@@ -8,6 +8,7 @@ import Leaf from "@/components/Leaf";
 import { getAllies } from "@/lib/allies";
 import { getExtras } from "@/lib/menu";
 import { getSettings } from "@/lib/settings";
+import { absoluteUrl, breadcrumbJsonLd, buildMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -25,11 +26,15 @@ export async function generateMetadata({
   const ally = await buscarAliado(slug);
   if (!ally) return { title: "Aliado no encontrado" };
 
-  return {
-    title: ally.name,
-    description:
+  return buildMetadata({
+    seo: ally,
+    fallbackTitle: ally.name,
+    fallbackDescription:
       ally.tagline ?? `Conoce a ${ally.name}, una de las marcas detrás de Roa Brew.`,
-  };
+    path: `/aliados/${ally.slug}`,
+    image: ally.coverUrl ?? ally.logoUrl,
+    type: "article",
+  });
 }
 
 export default async function AliadoPage({
@@ -51,8 +56,33 @@ export default async function AliadoPage({
     .map((p) => p.trim())
     .filter(Boolean);
 
+  // Brand y no Organization: es una marca cuyos productos vendemos, no la
+  // empresa que atiende. Google las trata distinto.
+  const marca = {
+    "@context": "https://schema.org",
+    "@type": "Brand",
+    name: ally.name,
+    url: absoluteUrl(`/aliados/${ally.slug}`),
+    ...(ally.logoUrl ? { logo: ally.logoUrl } : {}),
+    ...(ally.coverUrl ? { image: [ally.coverUrl] } : {}),
+    ...(ally.tagline ? { description: ally.tagline } : {}),
+  };
+
+  const migas = breadcrumbJsonLd([
+    { name: "Inicio", path: "/" },
+    { name: ally.name, path: `/aliados/${ally.slug}` },
+  ]);
+
   return (
     <div className="bg-roa-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(marca) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(migas) }}
+      />
       {/* Cabecera */}
       <header className="grain relative overflow-hidden bg-roa-800 px-5 pb-16 pt-40 text-cream sm:pt-48">
         <div className="glow pointer-events-none absolute left-1/4 top-0 h-96 w-[34rem] opacity-40" />

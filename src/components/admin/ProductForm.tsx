@@ -20,6 +20,11 @@ type Product = {
   position: number;
   categoryId: string;
   allyId: string | null;
+  slug: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  seoKeywords: string | null;
+  imageAlt: string | null;
 };
 
 type Ally = { id: string; name: string };
@@ -181,6 +186,83 @@ export default function ProductForm({
           <LinkButton href="/admin/productos" variant="ghost">
             Cancelar
           </LinkButton>
+        </div>
+      </Panel>
+
+      {/* Solo para administración: nada de esto se le muestra al cliente,
+          solo a los buscadores. */}
+      <Panel title="SEO">
+        <p className="-mt-2 mb-4 text-sm text-cream/45">
+          Lo que ve Google, aparte de lo que ve el cliente. Déjalo vacío y se arma
+          solo con el nombre y la descripción de arriba.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Meta title"
+            className="sm:col-span-2"
+            hint="hasta 60 caracteres · Google recorta lo que sobra"
+          >
+            <input
+              name="metaTitle"
+              defaultValue={product?.metaTitle ?? ""}
+              maxLength={70}
+              placeholder={`${product?.name ?? "Nombre"} | Roa Brew Los Olivos`}
+              className={inputClass}
+            />
+          </Field>
+
+          <Field
+            label="Meta description"
+            className="sm:col-span-2"
+            hint="hasta 155 caracteres · es el texto bajo el título en el buscador"
+          >
+            <textarea
+              name="metaDescription"
+              defaultValue={product?.metaDescription ?? ""}
+              rows={2}
+              maxLength={200}
+              className={`${inputClass} resize-none`}
+            />
+          </Field>
+
+          <Field
+            label="Slug / URL amigable"
+            hint={`roabrew.com/producto/${product?.slug ?? "..."}`}
+          >
+            <input
+              name="slug"
+              defaultValue={product?.slug ?? ""}
+              placeholder="se genera del nombre"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field label="SEO keywords" hint="separadas por coma · opcional">
+            <input
+              name="seoKeywords"
+              defaultValue={product?.seoKeywords ?? ""}
+              placeholder="matcha lima, matcha los olivos"
+              className={inputClass}
+            />
+          </Field>
+
+          <Field
+            label="Alt text de imagen"
+            className="sm:col-span-2"
+            hint="describe la foto: lo leen Google y los lectores de pantalla"
+          >
+            <input
+              name="imageAlt"
+              defaultValue={product?.imageAlt ?? ""}
+              placeholder={`Vaso de ${product?.name ?? "la bebida"} de Roa Brew`}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+
+        <div className="mt-5 flex gap-3">
+          <Button variant="primary">Guardar SEO</Button>
         </div>
       </Panel>
 

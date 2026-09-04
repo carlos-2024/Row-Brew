@@ -125,6 +125,54 @@ export default async function AliadosPage() {
                   <Toggle name="active" label="Visible" defaultChecked={ally.active} />
                 </div>
 
+                {/* Solo para administración: nada de esto lo ve el cliente */}
+                <details className="sm:col-span-6 rounded-xl border-2 border-cream/12 p-3">
+                  <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-cream/45">
+                    SEO
+                  </summary>
+                
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <Field label="Meta title" className="sm:col-span-2" hint="hasta 60 caracteres">
+                      <input
+                        name="metaTitle"
+                        defaultValue={ally.metaTitle ?? ""}
+                        maxLength={70}
+                        className={inputClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Meta description"
+                      className="sm:col-span-2"
+                      hint="hasta 155 caracteres"
+                    >
+                      <textarea
+                        name="metaDescription"
+                        defaultValue={ally.metaDescription ?? ""}
+                        rows={2}
+                        maxLength={200}
+                        className={`${inputClass} resize-none`}
+                      />
+                    </Field>
+                    <Field label="SEO keywords" hint="separadas por coma">
+                      <input
+                        name="seoKeywords"
+                        defaultValue={ally.seoKeywords ?? ""}
+                        className={inputClass}
+                      />
+                    </Field>
+                    <Field label="Alt text de imagen">
+                      <input
+                        name="imageAlt"
+                        defaultValue={ally.imageAlt ?? ""}
+                        className={inputClass}
+                      />
+                    </Field>
+                    <p className="sm:col-span-2 text-xs text-cream/35">
+                      URL: /aliados/{ally.slug}
+                    </p>
+                  </div>
+                </details>
+
                 <div className="sm:col-span-6">
                   <Button variant="primary">Guardar aliado</Button>
                 </div>
