@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bagel_Fat_One, Outfit, Caveat } from "next/font/google";
 import Analytics from "@/components/Analytics";
+import MetaPixel from "@/components/MetaPixel";
 import "./globals.css";
 
 const bagel = Bagel_Fat_One({
@@ -67,9 +68,10 @@ export default function RootLayout({
     <html lang="es" className={`${bagel.variable} ${outfit.variable} ${caveat.variable}`}>
       <body className="antialiased">
         {children}
-        {/* Va en el layout raíz para cubrir también la pantalla de espera,
+        {/* Van en el layout raíz para cubrir también la pantalla de espera,
             que vive fuera del layout del sitio */}
         <Analytics />
+        <MetaPixel />
       </body>
     </html>
   );
