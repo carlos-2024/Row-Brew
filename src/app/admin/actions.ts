@@ -90,6 +90,9 @@ export async function saveProduct(formData: FormData) {
     position: num(formData, "position"),
     categoryId,
     allyId: str(formData, "allyId") || null,
+    subcategoryId: str(formData, "subcategoryId") || null,
+    // Solo dos valores válidos: cualquier otra cosa que llegue se trata como frío
+    temperature: str(formData, "temperature") === "caliente" ? "caliente" : "frio",
 
     // ── SEO ── vacío significa "arma uno con el nombre y la descripción"
     metaTitle: str(formData, "metaTitle") || null,
@@ -230,6 +233,44 @@ export async function deletePromo(formData: FormData) {
   await requireSession();
   const id = str(formData, "id");
   if (id) await prisma.promo.delete({ where: { id } });
+  await refresh("Eliminado");
+}
+
+// ─────────────────────────── Subcategorías ───────────────────────────
+
+export async function saveSubcategory(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const name = str(formData, "name");
+  if (!name) throw new Error("El nombre de la subcategoría es obligatorio.");
+
+  const data = {
+    name,
+    position: num(formData, "position"),
+    active: bool(formData, "active"),
+  };
+
+  if (id) {
+    await prisma.subcategory.update({ where: { id }, data });
+  } else {
+    // Slug libre: dos subcategorías con el mismo nombre no deben chocar
+    const base = slugify(name) || "subcategoria";
+    let slug = base;
+    for (let i = 2; await prisma.subcategory.findUnique({ where: { slug } }); i++) {
+      slug = `${base}-${i}`;
+    }
+    await prisma.subcategory.create({ data: { ...data, slug } });
+  }
+
+  await refresh();
+}
+
+export async function deleteSubcategory(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  // Sus productos no se borran: la relación es SetNull y quedan sin subcategoría
+  if (id) await prisma.subcategory.delete({ where: { id } });
   await refresh("Eliminado");
 }
 

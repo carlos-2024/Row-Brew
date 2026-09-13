@@ -120,6 +120,8 @@ type Props = {
   className?: string;
   /** Anima el líquido y las burbujas */
   animated?: boolean;
+  /** frio | caliente. Por defecto frío: es lo que eran todas al principio. */
+  temperature?: string;
 };
 
 export default function CupArt({
@@ -127,12 +129,24 @@ export default function CupArt({
   categorySlug,
   className = "",
   animated = true,
+  temperature = "frio",
 }: Props) {
   const p = drinkPalette(name, categorySlug);
   // useId y no el nombre del producto: la misma bebida se dibuja dos veces
   // en la página (carrusel de móvil y grilla de escritorio), y con ids
   // repetidos el navegador no resuelve el degradado — el vaso salía vacío.
   const uid = useId().replace(/:/g, "");
+
+  if (temperature === "caliente") {
+    return (
+      <HotCup
+        name={name}
+        palette={p}
+        className={className}
+        animated={animated}
+      />
+    );
+  }
 
   return (
     <svg
@@ -266,6 +280,99 @@ export default function CupArt({
       {/* Tapa */}
       <rect x="18" y="26" width="84" height="13" rx="6.5" fill="#0c100b" />
       <rect x="22" y="29" width="76" height="4" rx="2" fill="#ffffff" opacity="0.18" />
+    </svg>
+  );
+}
+
+/**
+ * Vaso de bebida caliente.
+ *
+ * Un vaso de papel y no el transparente: así se sirve lo caliente, y es lo que
+ * hace legible la temperatura de un vistazo, antes que cualquier rótulo. Sin
+ * hielo, sin sorbete y sin burbujas, que delatarían una bebida fría.
+ *
+ * Como el papel tapa el líquido, el sabor se lee en la faja: lleva los colores
+ * de la bebida para que un matcha caliente y un café caliente sigan
+ * distinguiéndose.
+ */
+function HotCup({
+  name,
+  palette: p,
+  className,
+  animated,
+}: {
+  name: string;
+  palette: Palette;
+  className: string;
+  animated: boolean;
+}) {
+  const vapor = animated ? "steam" : undefined;
+
+  return (
+    <svg
+      viewBox="0 0 120 168"
+      className={className}
+      role="img"
+      aria-label={`Ilustración de ${name}, bebida caliente`}
+    >
+      {/* Vapor */}
+      <g
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="4"
+        strokeLinecap="round"
+        opacity="0.75"
+      >
+        <path d="M46 30c-6-6 6-10 0-17" className={vapor} />
+        <path
+          d="M60 26c-6-7 6-11 0-19"
+          className={vapor}
+          style={animated ? { animationDelay: "0.9s" } : undefined}
+        />
+        <path
+          d="M74 30c-6-6 6-10 0-17"
+          className={vapor}
+          style={animated ? { animationDelay: "1.7s" } : undefined}
+        />
+      </g>
+
+      {/* Cuerpo de papel */}
+      <path
+        d="M26 50h68l-7 90a12 12 0 0 1-12 11H45a12 12 0 0 1-12-11L26 50Z"
+        fill={C.milk}
+      />
+      {/* Sombra del lado derecho: da volumen sin usar degradados */}
+      <path
+        d="M80 50h14l-7 90a12 12 0 0 1-8 10.6L80 50Z"
+        fill="#0c100b"
+        opacity="0.07"
+      />
+
+      {/* Faja con los colores de la bebida */}
+      <path d="M29.2 86h61.6l-1.9 26H31.1l-1.9-26Z" fill={p.top} />
+      <path d="M30.6 104h58.8l-.5 8H31.1l-.5-8Z" fill={p.bottom} opacity="0.9" />
+      <path
+        d="M29.2 86h61.6l-1.9 26H31.1l-1.9-26Z"
+        fill="none"
+        stroke="#0c100b"
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+
+      {/* Contorno */}
+      <path
+        d="M26 50h68l-7 90a12 12 0 0 1-12 11H45a12 12 0 0 1-12-11L26 50Z"
+        fill="none"
+        stroke="#0c100b"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+
+      {/* Tapa abombada con boquilla */}
+      <path d="M20 52h80v-4a6 6 0 0 0-6-6H26a6 6 0 0 0-6 6v4Z" fill="#0c100b" />
+      <path d="M30 42c2-6 8-8 30-8s28 2 30 8H30Z" fill="#0c100b" />
+      <rect x="66" y="37" width="12" height="3" rx="1.5" fill={C.milk} opacity="0.5" />
+      <rect x="24" y="45" width="72" height="3" rx="1.5" fill="#ffffff" opacity="0.16" />
     </svg>
   );
 }

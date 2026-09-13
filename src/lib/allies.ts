@@ -87,6 +87,7 @@ export async function getAllies(): Promise<AllyView[]> {
         categorySlug: p.category.slug,
         categoryName: p.category.name,
         categoryKind: p.category.kind,
+        temperature: p.temperature,
       })),
     }));
   } catch {

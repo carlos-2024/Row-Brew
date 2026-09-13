@@ -62,6 +62,7 @@ export async function getMenu(): Promise<MenuCategory[]> {
           categorySlug: c.slug,
           categoryName: c.name,
           categoryKind: c.kind,
+          temperature: p.temperature,
           extraGroups: p.extraGroups.map((g) => ({
             id: g.id,
             name: g.name,
@@ -153,6 +154,7 @@ export async function getPromos(): Promise<PromoView[]> {
           categorySlug: cat?.slug ?? "",
           categoryName: cat?.name ?? "",
           categoryKind: cat?.kind ?? "bebida",
+          temperature: prod.temperature,
         })),
       };
     });

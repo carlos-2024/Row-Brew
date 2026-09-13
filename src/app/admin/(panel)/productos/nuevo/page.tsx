@@ -5,13 +5,18 @@ import { AdminHeader, EmptyState, LinkButton } from "@/components/admin/ui";
 export const dynamic = "force-dynamic";
 
 export default async function NuevoProductoPage() {
-  const [categories, allies] = await Promise.all([
+  const [categories, allies, subcategories] = await Promise.all([
     prisma.category.findMany({
       orderBy: { position: "asc" },
-      select: { id: true, name: true, slug: true, emoji: true },
+      select: { id: true, name: true, slug: true, emoji: true, kind: true },
     }),
     prisma.ally.findMany({
       orderBy: { position: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.subcategory.findMany({
+      where: { active: true },
+      orderBy: [{ position: "asc" }, { name: "asc" }],
       select: { id: true, name: true },
     }),
   ]);
@@ -26,7 +31,7 @@ export default async function NuevoProductoPage() {
           action={<LinkButton href="/admin/categorias">Ir a categorías</LinkButton>}
         />
       ) : (
-        <ProductForm categories={categories} allies={allies} />
+        <ProductForm categories={categories} subcategories={subcategories} allies={allies} />
       )}
     </>
   );

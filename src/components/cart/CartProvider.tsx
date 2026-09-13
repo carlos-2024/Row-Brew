@@ -123,6 +123,7 @@ export function CartProvider({
             extras,
             categorySlug: product.categorySlug,
             categoryKind: product.categoryKind,
+            temperature: product.temperature,
             promoEligible: product.promoEligible,
           },
         ];

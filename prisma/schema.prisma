@@ -30,6 +30,21 @@ model Category {
   updatedAt   DateTime  @updatedAt
 }
 
+/// Segunda clasificación, transversal a las familias: un matcha y un cold
+/// brew pueden ser los dos Signature. Se administra desde el panel, como las
+/// familias, para poder sumar otras (Temporada, Nuevo) sin tocar el código.
+model Subcategory {
+  id       String    @id @default(cuid())
+  name     String
+  slug     String    @unique
+  position Int       @default(0)
+  active   Boolean   @default(true)
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Product {
   id          String      @id @default(cuid())
   name        String
@@ -40,6 +55,10 @@ model Product {
   /// nuevo | estrella | null
   badge       String?
   size        String? // "16oz", "12oz"
+  /// frio | caliente. Cambia el dibujo — vaso con hielo y sorbete, o vaso de
+  /// papel con vapor — y es el dato para separar la carta por temperatura.
+  /// Frío por defecto: es lo que eran todas las bebidas al agregar el campo.
+  temperature String      @default("frio")
   /// Si entra en la promo automática de su categoría
   promoEligible Boolean   @default(true)
   featured    Boolean     @default(false)
@@ -47,6 +66,11 @@ model Product {
   position    Int         @default(0)
   categoryId  String
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  /// Clásico, Signature… Opcional: borrar una subcategoría no borra sus
+  /// productos, solo los deja sin ella.
+  subcategoryId String?
+  subcategory   Subcategory? @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
 
   /// Si viene de una marca aliada. Estos productos NO salen en la carta:
   /// se muestran solo en la sección de aliados, aunque se compran igual.
@@ -78,6 +102,7 @@ model Product {
 
   @@index([categoryId])
   @@index([allyId])
+  @@index([subcategoryId])
 }
 
 /// Grupo de opcionales: "Leche", "Boba", "Tipo de café".
