@@ -76,6 +76,7 @@ export default async function PedidoPage({
                       name={item.name}
                       categorySlug={item.product?.category?.slug ?? "sparkling-tea"}
                       kind={item.product?.category?.kind ?? "bebida"}
+                      temperature={item.product?.temperature}
                       className="h-14"
                       animated={false}
                     />

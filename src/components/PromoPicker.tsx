@@ -156,6 +156,7 @@ export default function PromoPicker({
                             name={p.name}
                             categorySlug={p.categorySlug}
                             kind={p.categoryKind}
+                            temperature={p.temperature}
                             className="h-12"
                             animated={false}
                           />

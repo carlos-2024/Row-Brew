@@ -13,6 +13,7 @@ export default function ProductArt({
   name,
   categorySlug,
   kind = "bebida",
+  temperature = "frio",
   className = "",
   animated = true,
 }: {
@@ -20,6 +21,8 @@ export default function ProductArt({
   categorySlug: string;
   /** bebida | comida | postre. Por defecto bebida: es lo que había antes. */
   kind?: string;
+  /** frio | caliente. Solo cambia el dibujo de las bebidas. */
+  temperature?: string;
   className?: string;
   animated?: boolean;
 }) {
@@ -33,6 +36,7 @@ export default function ProductArt({
       categorySlug={categorySlug}
       className={className}
       animated={animated}
+      temperature={temperature}
     />
   );
 }
