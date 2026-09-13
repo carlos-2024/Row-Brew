@@ -32,6 +32,8 @@ services:
       # Vacío = el seed genera una contraseña aleatoria y la imprime
       ADMIN_PASSWORD: ""
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      # Vacía = buscador de direcciones con OpenStreetMap
+      GOOGLE_MAPS_API_KEY: ""
     ports:
       - "3000:3000"
     volumes:

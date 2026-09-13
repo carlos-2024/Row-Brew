@@ -14,6 +14,30 @@ export type Direccion = {
   message: string | null;
 };
 
+/**
+ * Sugerencia de Google: todavía sin coordenadas. Se piden al elegirla, así
+ * no se paga el detalle de las cinco sugerencias en cada tecla.
+ */
+type SugerenciaGoogle = {
+  placeId: string;
+  label: string;
+  main: string;
+  secondary: string;
+};
+
+type Sugerencia = Direccion | SugerenciaGoogle;
+
+const esGoogle = (s: Sugerencia): s is SugerenciaGoogle => "placeId" in s;
+
+/**
+ * Token que agrupa las consultas de una misma búsqueda. Google cobra la sesión
+ * completa —todas las teclas más el detalle final— como una sola búsqueda.
+ */
+function nuevoToken(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+}
+
 const MENSAJE_MANUAL =
   "Te confirmamos por WhatsApp si llegamos a tu zona y cuánto cuesta el envío.";
 
@@ -44,14 +68,18 @@ export default function AddressSearch({
   currency: string;
 }) {
   const [texto, setTexto] = useState(value?.label ?? "");
-  const [sugerencias, setSugerencias] = useState<Direccion[]>([]);
+  const [sugerencias, setSugerencias] = useState<Sugerencia[]>([]);
+  /** Mientras se piden las coordenadas de la sugerencia elegida */
+  const [resolviendo, setResolviendo] = useState(false);
+  const [errorDetalle, setErrorDetalle] = useState<string | null>(null);
+  const sesion = useRef<string | null>(null);
   const [buscando, setBuscando] = useState(false);
   const [abierto, setAbierto] = useState(false);
   const [manual, setManual] = useState(false);
   const timer = useRef<number | null>(null);
   const aborto = useRef<AbortController | null>(null);
   /** Lo ya consultado en esta sesión: escribir y borrar no vuelve a pedirlo */
-  const cache = useRef(new Map<string, Direccion[]>());
+  const cache = useRef(new Map<string, Sugerencia[]>());
 
   useEffect(() => {
     if (manual) return;
@@ -85,11 +113,13 @@ export default function AddressSearch({
       aborto.current = ctrl;
 
       try {
-        const res = await fetch(`/api/direcciones?q=${encodeURIComponent(q)}`, {
-          signal: ctrl.signal,
-        });
+        if (!sesion.current) sesion.current = nuevoToken();
+        const res = await fetch(
+          `/api/direcciones?q=${encodeURIComponent(q)}&s=${sesion.current}`,
+          { signal: ctrl.signal }
+        );
         const data = await res.json();
-        const results: Direccion[] = data.results ?? [];
+        const results: Sugerencia[] = data.results ?? [];
         cache.current.set(q.toLowerCase(), results);
         setSugerencias(results);
         setAbierto(true);
@@ -105,18 +135,48 @@ export default function AddressSearch({
     };
   }, [texto, value, manual]);
 
-  function elegir(d: Direccion) {
-    onChange(d);
-    setTexto(d.label);
+  async function elegir(s: Sugerencia) {
     setAbierto(false);
-    setSugerencias([]);
+    setErrorDetalle(null);
+
+    if (!esGoogle(s)) {
+      onChange(s);
+      setTexto(s.label);
+      setSugerencias([]);
+      return;
+    }
+
+    // De Google llega sin coordenadas: se piden ahora, una sola vez
+    setTexto(s.label);
+    setResolviendo(true);
+    try {
+      const token = sesion.current ? `&s=${sesion.current}` : "";
+      const res = await fetch(
+        `/api/direcciones/detalle?placeId=${encodeURIComponent(s.placeId)}${token}`
+      );
+      const data = await res.json();
+      if (!res.ok || !data.result) {
+        throw new Error(data.error ?? "No pudimos ubicar esa dirección. Escríbela a mano.");
+      }
+
+      const d: Direccion = data.result;
+      const label = d.label || s.label;
+      setTexto(label);
+      onChange({ ...d, label });
+      setSugerencias([]);
+    } catch (e) {
+      setErrorDetalle((e as Error).message || "No pudimos ubicar esa dirección. Escríbela a mano.");
+    } finally {
+      setResolviendo(false);
+      // La sesión se cierra con el detalle: la próxima búsqueda es otra
+      sesion.current = null;
+    }
   }
 
   /**
-   * Salida de emergencia: OpenStreetMap no tiene todas las calles de Lima ni
-   * las numeraciones, así que hay direcciones reales que el buscador no
-   * encuentra. Antes eso dejaba al cliente sin poder pedir; ahora la escribe
-   * a mano y el envío se acuerda por WhatsApp.
+   * Salida de emergencia: ningún buscador tiene todas las direcciones —una
+   * casa nueva, un pasaje sin nombre—, y antes eso dejaba al cliente sin poder
+   * pedir. La escribe a mano y el envío se acuerda por WhatsApp.
    */
   function escribirAMano() {
     setManual(true);
@@ -191,6 +251,7 @@ export default function AddressSearch({
           value={texto}
           onChange={(e) => {
             setTexto(e.target.value);
+            setErrorDetalle(null);
             if (value) onChange(null);
           }}
           onFocus={() => sugerencias.length > 0 && setAbierto(true)}
@@ -199,9 +260,9 @@ export default function AddressSearch({
           autoComplete="off"
         />
         <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink/35" />
-        {buscando && (
+        {(buscando || resolviendo) && (
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-ink/40">
-            buscando…
+            {resolviendo ? "calculando envío…" : "buscando…"}
           </span>
         )}
       </div>
@@ -210,31 +271,50 @@ export default function AddressSearch({
       {abierto && sugerencias.length > 0 && (
         <ul className="mt-2 max-h-56 overflow-y-auto rounded-xl border-2 border-ink/15 bg-white">
           {sugerencias.map((s, i) => (
-            <li key={i}>
+            <li key={esGoogle(s) ? s.placeId : i}>
               <button
                 type="button"
                 onClick={() => elegir(s)}
                 className="flex w-full items-start gap-3 border-b border-ink/8 px-3 py-2.5 text-left transition last:border-0 hover:bg-roa-100"
               >
-                <span
-                  className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${
-                    s.zone === "gratis"
-                      ? "bg-mango"
-                      : s.zone === "costo"
-                        ? "bg-grape"
-                        : "bg-ink/25"
-                  }`}
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-ink/85">{s.label}</span>
-                  <span className="text-xs font-bold text-ink/45">
-                    {s.zone === "gratis"
-                      ? "Envío gratis"
-                      : s.zone === "costo"
-                        ? `Envío ${currency} ${s.fee.toFixed(2)}`
-                        : "Fuera de zona"}
-                  </span>
-                </span>
+                {esGoogle(s) ? (
+                  <>
+                    {/* De Google aún no se sabe la zona: se calcula al elegir */}
+                    <span className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full border-2 border-ink/30" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-ink/85">
+                        {s.main}
+                      </span>
+                      {s.secondary && (
+                        <span className="block truncate text-xs text-ink/50">
+                          {s.secondary}
+                        </span>
+                      )}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span
+                      className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${
+                        s.zone === "gratis"
+                          ? "bg-mango"
+                          : s.zone === "costo"
+                            ? "bg-grape"
+                            : "bg-ink/25"
+                      }`}
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm text-ink/85">{s.label}</span>
+                      <span className="text-xs font-bold text-ink/45">
+                        {s.zone === "gratis"
+                          ? "Envío gratis"
+                          : s.zone === "costo"
+                            ? `Envío ${currency} ${s.fee.toFixed(2)}`
+                            : "Fuera de zona"}
+                      </span>
+                    </span>
+                  </>
+                )}
               </button>
             </li>
           ))}
@@ -246,6 +326,19 @@ export default function AddressSearch({
           <p className="text-xs leading-snug text-ink/50">
             No encontramos esa dirección. Prueba solo con la calle y el distrito.
           </p>
+          <button
+            type="button"
+            onClick={escribirAMano}
+            className="mt-1.5 text-xs font-bold text-roa-600 underline underline-offset-2"
+          >
+            Escribirla a mano
+          </button>
+        </div>
+      )}
+
+      {errorDetalle && !value && (
+        <div className="mt-2 rounded-xl border-2 border-ink/12 bg-white/60 px-3 py-2.5">
+          <p className="text-xs leading-snug text-ink/60">{errorDetalle}</p>
           <button
             type="button"
             onClick={escribirAMano}
