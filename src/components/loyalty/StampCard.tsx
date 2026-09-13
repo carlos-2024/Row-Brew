@@ -13,10 +13,26 @@ type Props = {
 };
 
 /**
+ * Los sellos de la tarjeta, en el orden en que se van estampando.
+ *
+ * Son versiones recortadas y livianas de los logos LogoFidelidad*.png: los
+ * originales pesan unos 350 KB y traen un margen transparente que dejaba al
+ * perro diminuto dentro de una casilla de pocos píxeles. Las de 256 px pesan
+ * ~30 KB.
+ */
+const SELLOS = [
+  { src: "/img/sellos/LogoFidelidadVerde.webp", color: "verde" },
+  { src: "/img/sellos/LogoFidelidadMorado.webp", color: "morado" },
+  { src: "/img/sellos/LogoFidelidadAmarrillo.webp", color: "amarillo" },
+  { src: "/img/sellos/LogoFidelidadMarron.webp", color: "marrón" },
+];
+
+/**
  * Tarjeta de sellos de Roa Brew.
  *
- * Cada casilla llena estampa la huella de Koda. La casilla intermedia y la
- * final se marcan aparte porque son las que dan premio.
+ * Cada casilla llena estampa a Koda con una tinta distinta, como una tarjeta de
+ * cartón sellada a mano en barra. La casilla intermedia y la final se marcan
+ * aparte porque son las que dan premio.
  */
 export default function StampCard({ status, name, dni, animate = true }: Props) {
   const slots = Array.from({ length: status.goal }, (_, i) => i + 1);
@@ -67,7 +83,7 @@ export default function StampCard({ status, name, dni, animate = true }: Props) 
               key={n}
               className={`relative aspect-square rounded-2xl border-2 transition-colors ${
                 filled
-                  ? "border-ink bg-roa-500"
+                  ? "border-ink bg-cream"
                   : isMid || isFinal
                     ? "border-dashed border-ink/45 bg-white/60"
                     : "border-dashed border-ink/20 bg-white/40"
@@ -91,9 +107,10 @@ export default function StampCard({ status, name, dni, animate = true }: Props) 
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/img/kodaWhite.png"
-                    alt="Sello de Roa Brew"
+                    src={SELLOS[(n - 1) % SELLOS.length].src}
+                    alt={`Sello ${n} de Roa Brew`}
                     className="h-4/5 w-4/5 object-contain"
+                    decoding="async"
                   />
                 </span>
               ) : (
