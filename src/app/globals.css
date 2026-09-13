@@ -116,6 +116,14 @@
 
 /* El vaivén es corto a propósito: la onda es la superficie del líquido,
    y un recorrido largo la despega de las paredes del vaso. */
+/* Vapor de las bebidas calientes: sube, se ensancha y se desvanece. Cada
+   voluta lleva su propio retraso para que no suban en bloque. */
+@keyframes steam {
+  0%   { transform: translateY(6px) scaleX(0.9); opacity: 0; }
+  30%  { opacity: 0.7; }
+  100% { transform: translateY(-10px) scaleX(1.15); opacity: 0; }
+}
+
 @keyframes liquid {
   0%, 100% { transform: translateX(-2%) translateY(0) rotate(0deg); }
   50%      { transform: translateX(2%) translateY(-2px) rotate(0.7deg); }
@@ -274,6 +282,7 @@
 
   /* Vaso animado: el líquido se mece */
   .liquid { animation: liquid 7s ease-in-out infinite; }
+  .steam { animation: steam 2.8s ease-out infinite; transform-box: fill-box; transform-origin: center bottom; }
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

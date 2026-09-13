@@ -13,6 +13,10 @@ export type MenuProduct = {
   categoryName: string;
   /** bebida | comida | postre, heredado de su familia */
   categoryKind: string;
+  /** frio | caliente. Ausente se trata como frío. */
+  temperature?: string;
+  /** Clásico, Signature… */
+  subcategoryName?: string | null;
   /** Grupos de opcionales propios. Ausente: solo los extras sueltos. */
   extraGroups?: MenuExtraGroup[];
 };
@@ -112,5 +116,6 @@ export type CartItem = {
   categorySlug: string;
   /** Para dibujarlo bien en el carrito sin volver a consultar la carta */
   categoryKind: string;
+  temperature?: string;
   promoEligible: boolean;
 };

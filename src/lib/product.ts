@@ -55,6 +55,7 @@ export async function getProductBySlug(slug: string): Promise<ProductPage | null
       categorySlug: p.category.slug,
       categoryName: p.category.name,
       categoryKind: p.category.kind,
+      temperature: p.temperature,
       categoryTagline: p.category.tagline,
       allyName: p.ally?.name ?? null,
       allySlug: p.ally?.slug ?? null,
@@ -129,6 +130,7 @@ export async function getRelated(
       categorySlug: p.category.slug,
       categoryName: p.category.name,
       categoryKind: p.category.kind,
+      temperature: p.temperature,
     }));
   } catch {
     return [];

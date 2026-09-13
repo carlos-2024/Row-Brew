@@ -96,6 +96,7 @@ export default async function ProductosPage({
                       name={product.name}
                       categorySlug={product.category.slug}
                       kind={product.category.kind}
+                      temperature={product.temperature}
                       className="h-14"
                       animated={false}
                     />

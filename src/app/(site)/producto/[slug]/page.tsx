@@ -135,6 +135,7 @@ export default async function ProductoPage({
                   name={p.name}
                   categorySlug={p.categorySlug}
                   kind={p.categoryKind}
+                  temperature={p.temperature}
                   className="h-64"
                 />
               )}

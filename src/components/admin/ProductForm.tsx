@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import { saveProduct } from "@/app/admin/actions";
 import { Button, Field, LinkButton, Panel, Toggle, inputClass } from "./ui";
 import { toNumber } from "@/lib/format";
-import CupArt from "@/components/CupArt";
+import ProductPreview from "./ProductPreview";
 
-type Category = { id: string; name: string; slug: string; emoji: string };
+type Category = { id: string; name: string; slug: string; emoji: string; kind: string };
+type Subcategory = { id: string; name: string };
 
 type Product = {
   id: string;
@@ -20,6 +21,8 @@ type Product = {
   position: number;
   categoryId: string;
   allyId: string | null;
+  subcategoryId: string | null;
+  temperature: string;
   slug: string;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -31,10 +34,12 @@ type Ally = { id: string; name: string };
 
 export default function ProductForm({
   categories,
+  subcategories = [],
   allies = [],
   product,
 }: {
   categories: Category[];
+  subcategories?: Subcategory[];
   allies?: Ally[];
   product?: Product;
 }) {
@@ -97,6 +102,45 @@ export default function ProductForm({
                 </option>
               ))}
             </select>
+          </Field>
+
+          <Field label="Subcategoría" hint="opcional">
+            <select
+              name="subcategoryId"
+              defaultValue={product?.subcategoryId ?? ""}
+              className={inputClass}
+            >
+              <option value="">Sin subcategoría</option>
+              {subcategories.map((sc) => (
+                <option key={sc.id} value={sc.id}>
+                  {sc.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          {/* Radios y no desplegable: son dos opciones y así se ven las dos sin
+              abrir nada, que es lo que se quiere al comparar la vista previa */}
+          <Field label="Temperatura">
+            <div className="flex gap-2">
+              {[
+                { value: "frio", label: "Frío" },
+                { value: "caliente", label: "Caliente" },
+              ].map((t) => (
+                <label key={t.value} className="flex-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="temperature"
+                    value={t.value}
+                    defaultChecked={(product?.temperature ?? "frio") === t.value}
+                    className="peer sr-only"
+                  />
+                  <span className="block rounded-xl border-2 border-cream/15 px-3 py-2.5 text-center text-sm font-bold text-cream/60 transition peer-checked:border-roa-500 peer-checked:bg-roa-500/20 peer-checked:text-cream peer-focus-visible:ring-2 peer-focus-visible:ring-roa-300">
+                    {t.label}
+                  </span>
+                </label>
+              ))}
+            </div>
           </Field>
 
           <Field label="Tamaño" hint="Opcional: 16oz, 12oz…">
@@ -267,18 +311,15 @@ export default function ProductForm({
       </Panel>
 
       <Panel title="Vista previa">
-        <div className="grid place-items-center rounded-3xl bg-gradient-to-b from-roa-200 to-roa-100 py-8">
-          <CupArt
-            name={product?.name ?? "Sparkling Hawaii"}
-            categorySlug={current?.slug ?? "sparkling-tea"}
-            className="h-52"
-          />
-        </div>
-        <p className="mt-4 text-sm text-cream/45">
-          La ilustración se genera a partir del nombre y la categoría: si el nombre
-          menciona mango, fresa, taro o matcha, los colores del vaso cambian solos.
-          Cuando cargues una foto real, la reemplaza.
-        </p>
+        <ProductPreview
+          categories={categories.map((c) => ({ id: c.id, slug: c.slug, kind: c.kind }))}
+          initial={{
+            name: product?.name ?? "",
+            categoryId: product?.categoryId ?? current?.id ?? "",
+            temperature: product?.temperature ?? "frio",
+            imageUrl: product?.imageUrl ?? "",
+          }}
+        />
       </Panel>
     </form>
   );

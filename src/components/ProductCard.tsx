@@ -92,6 +92,7 @@ export default function ProductCard({ product, extras, currency, index = 0 }: Pr
             name={product.name}
             categorySlug={product.categorySlug}
             kind={product.categoryKind}
+            temperature={product.temperature}
             className="relative h-36 transition-transform duration-500 group-hover:-translate-y-1.5 group-hover:scale-105"
           />
         )}

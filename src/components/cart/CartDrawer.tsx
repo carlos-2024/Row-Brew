@@ -249,6 +249,7 @@ export default function CartDrawer({
                       name={item.name}
                       categorySlug={item.categorySlug}
                       kind={item.categoryKind}
+                      temperature={item.temperature}
                       className="h-16"
                       animated={false}
                     />
