@@ -143,8 +143,11 @@ export default async function CategoriasPage() {
         </div>
 
         {/* Nueva categoría */}
-        {/* Columna lateral: altas de categoría y subcategorías */}
-        <div className="h-fit space-y-4 xl:sticky xl:top-6">
+        {/* Columna lateral: altas de categoría y subcategorías.
+            Sin sticky: con los dos paneles es más alta que la pantalla, y fija
+            arriba dejaba las subcategorías fuera de la vista sin forma de
+            llegar a ellas mientras la lista de categorías siguiera en pantalla. */}
+        <div className="h-fit space-y-4">
           <Panel title="Nueva categoría">
             <form action={saveCategory} className="space-y-4">
               <Field label="Nombre">
@@ -227,25 +230,31 @@ export default async function CategoriasPage() {
             <div className="space-y-2">
               {subcategories.map((sc) => (
                 <div key={sc.id} className="rounded-xl bg-cream/5 p-2">
-                  <form
-                    action={saveSubcategory}
-                    className="flex flex-wrap items-center gap-2"
-                  >
+                  {/* El nombre en su propia línea: en esta columna estrecha,
+                      compartiéndola con el interruptor y el botón, el campo
+                      quedaba de 43 px y no se leía ni una palabra */}
+                  <form action={saveSubcategory} className="space-y-2">
                     <input type="hidden" name="id" value={sc.id} />
                     <input type="hidden" name="position" value={sc.position} />
                     <input
                       name="name"
                       defaultValue={sc.name}
-                      className={`${inputClass} min-w-0 flex-1`}
+                      aria-label="Nombre de la subcategoría"
+                      className={`${inputClass} w-full`}
                     />
-                    <Toggle
-                      name="active"
-                      label="Activa"
-                      defaultChecked={sc.active}
-                    />
-                    <Button variant="primary" className="!px-3 !py-2 !text-sm">
-                      Guardar
-                    </Button>
+                    <div className="flex items-center justify-between gap-2">
+                      <Toggle
+                        name="active"
+                        label="Activa"
+                        defaultChecked={sc.active}
+                      />
+                      <Button
+                        variant="primary"
+                        className="!px-4 !py-2 !text-sm"
+                      >
+                        Guardar
+                      </Button>
+                    </div>
                   </form>
                   <div className="mt-1.5 flex items-center justify-between px-1">
                     <span className="text-xs text-cream/40">
@@ -269,10 +278,9 @@ export default async function CategoriasPage() {
                 </p>
               )}
             </div>
-
             <form
               action={saveSubcategory}
-              className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed border-cream/15 p-2"
+              className="mt-4 space-y-2 rounded-xl border-2 border-dashed border-cream/15 p-2.5"
             >
               <input type="hidden" name="active" value="true" />
               <input
@@ -284,9 +292,10 @@ export default async function CategoriasPage() {
                 name="name"
                 required
                 placeholder="Nueva subcategoría"
-                className={`${inputClass} min-w-0 flex-1`}
+                aria-label="Nombre de la nueva subcategoría"
+                className={`${inputClass} w-full`}
               />
-              <Button variant="primary" className="!px-3 !py-2 !text-sm">
+              <Button variant="primary" className="w-full !py-2 !text-sm">
                 + Agregar
               </Button>
             </form>
