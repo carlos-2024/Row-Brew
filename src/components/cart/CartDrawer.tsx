@@ -113,7 +113,7 @@ export default function CartDrawer({
       return;
     }
     if (esDelivery && !direccion) {
-      setError("Indica tu dirección de entrega para calcular el envío.");
+      setError("Escribe tu dirección de entrega.");
       return;
     }
     if (form.docType === "BOLETA_DNI" && form.docNumber.replace(/\D/g, "").length !== 8) {
@@ -349,11 +349,7 @@ export default function CartDrawer({
               {/* Delivery */}
               {esDelivery && (
                 <Campo label="¿A dónde te lo llevamos?">
-                  <AddressSearch
-                    value={direccion}
-                    onChange={setDireccion}
-                    currency={currency}
-                  />
+                  <AddressSearch value={direccion} onChange={setDireccion} />
                   <p className="mt-2 text-xs text-ink/45">{deliveryNote}</p>
                 </Campo>
               )}
