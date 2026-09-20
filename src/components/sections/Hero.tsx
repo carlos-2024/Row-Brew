@@ -1,4 +1,5 @@
 import Link from "next/link";
+import OpenCartButton from "@/components/OpenCartButton";
 import CupArt from "@/components/CupArt";
 import BobaField from "@/components/BobaField";
 import Leaf, { Sparkle } from "@/components/Leaf";
@@ -65,14 +66,11 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
             >
               Ver la carta
             </Link>
-            <a
-              href={`https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border-2 border-cream px-8 py-4 font-display text-xl text-cream transition hover:bg-cream hover:text-roa-900"
-            >
+            {/* Al carrito, no a WhatsApp: tocarlo sin haber elegido nada abría
+                un chat en blanco, sin pedido */}
+            <OpenCartButton className="flex items-center rounded-full border-2 border-cream px-8 py-4 font-display text-xl text-cream transition hover:bg-cream hover:text-roa-900">
               Pedir ahora
-            </a>
+            </OpenCartButton>
           </div>
 
           <dl className="mt-9 flex flex-wrap gap-x-7 gap-y-4">

@@ -2,6 +2,8 @@ import Reveal from "@/components/Reveal";
 import Marquee from "@/components/Marquee";
 import { KodaLogo } from "@/components/Brand";
 import { Sparkle, WaveDivider } from "@/components/Leaf";
+import EventQuoteModal from "@/components/events/EventQuoteModal";
+import { parseEventTypes } from "@/lib/events";
 
 const PUNTOS = [
   {
@@ -26,7 +28,15 @@ const PUNTOS = [
   },
 ];
 
-export default function Experiencia({ note }: { note: string }) {
+export default function Experiencia({
+  note,
+  eventTypes,
+  whatsapp,
+}: {
+  note: string;
+  eventTypes: string;
+  whatsapp: string;
+}) {
   return (
     <section id="experiencia" className="grain relative bg-cream py-24 text-ink">
       <WaveDivider className="absolute -top-1 left-0 h-14 w-full text-cream" flip />
@@ -72,6 +82,14 @@ export default function Experiencia({ note }: { note: string }) {
                 </li>
               ))}
             </ol>
+
+            <div className="mt-6">
+              <EventQuoteModal
+                eventTypes={parseEventTypes(eventTypes)}
+                whatsapp={whatsapp}
+                className="btn-shine inline-flex items-center gap-2 rounded-full border-2 border-ink bg-mango px-7 py-3.5 font-display text-lg text-ink shadow-[5px_5px_0_var(--color-ink)] transition hover:translate-x-[-3px] hover:translate-y-[-3px] hover:shadow-[9px_9px_0_var(--color-ink)]"
+              />
+            </div>
           </Reveal>
         </div>
       </div>
