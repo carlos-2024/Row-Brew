@@ -341,3 +341,23 @@ export function CheckIcon({ className = "" }: IconProps) {
     </svg>
   );
 }
+
+export function BellIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16S18 14 18 9Z" />
+      <path d="M13.7 19.5a2 2 0 0 1-3.4 0" />
+    </svg>
+  );
+}
+
+export function BellOffIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="M18 9a6 6 0 0 0-9.3-5" />
+      <path d="M6.2 6.2A6 6 0 0 0 6 9c0 5-2 6.5-2 6.5h12" />
+      <path d="M13.7 19.5a2 2 0 0 1-3.4 0" />
+      <path d="M3 3 21 21" />
+    </svg>
+  );
+}

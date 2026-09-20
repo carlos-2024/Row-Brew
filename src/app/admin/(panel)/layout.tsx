@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AdminNav from "@/components/admin/AdminNav";
 import Flash from "@/components/admin/Flash";
+import NuevoPedido from "@/components/admin/NuevoPedido";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -31,6 +32,8 @@ export default async function PanelLayout({
       {/* key: dos guardados seguidos con el mismo texto deben volver a
           mostrar el aviso, no dejarlo pasar por ser el mismo nodo */}
       {flash && <Flash key={flash + Date.now()} mensaje={flash} />}
+      {/* Avisa en cualquier pantalla del panel, no solo en la de pedidos */}
+      <NuevoPedido pendingCount={pendingCount} />
     </div>
   );
 }
