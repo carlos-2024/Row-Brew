@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BellIcon, BellOffIcon, ReceiptIcon } from "@/components/Icons";
+import { intervaloDeFondo } from "@/lib/intervaloDeFondo";
 
 /** Cada cuánto se pregunta si entró un pedido. */
 const CADA = 15000;
@@ -44,6 +45,37 @@ export default function NuevoPedido({ pendingCount }: { pendingCount: number }) 
       setActivo(window.localStorage.getItem(MEMORIA) === "1");
     } catch {
       /* navegación privada o almacenamiento bloqueado: queda apagado */
+    }
+  }, []);
+
+  /**
+   * Aviso del sistema operativo: el que aparece encima de lo que estés usando
+   * aunque el navegador esté minimizado, y se queda en el centro de
+   * notificaciones hasta que alguien lo toque.
+   *
+   * Solo se lanza con la pestaña de fondo. Si el panel está a la vista el
+   * aviso de la propia página ya se ve, y duplicarlo molesta.
+   */
+  const notificar = useCallback((p: Ultimo) => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    if (document.visibilityState === "visible") return;
+
+    try {
+      const n = new Notification("¡Pedido nuevo en Roa Brew!", {
+        body: `${p.nombre} · ${p.code}`,
+        // El id del pedido: dos pedidos distintos no se tapan entre sí, pero
+        // un mismo pedido nunca aparece dos veces
+        tag: p.id,
+        // Un pedido no se atiende solo: el aviso espera a que alguien lo vea
+        requireInteraction: true,
+      });
+      n.onclick = () => {
+        window.focus();
+        window.location.href = "/admin/pedidos";
+        n.close();
+      };
+    } catch {
+      /* algunos navegadores solo la permiten desde un service worker */
     }
   }, []);
 
@@ -99,6 +131,12 @@ export default function NuevoPedido({ pendingCount }: { pendingCount: number }) 
     void audio.current.resume();
     sonar(); // una prueba, para saber a qué volumen quedó
 
+    // Se pide aquí, aprovechando el clic: los navegadores rechazan el permiso
+    // si se pide solo, al cargar la página
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      void Notification.requestPermission();
+    }
+
     setActivo(true);
     try {
       window.localStorage.setItem(MEMORIA, "1");
@@ -128,7 +166,10 @@ export default function NuevoPedido({ pendingCount }: { pendingCount: number }) 
 
         visto.current = ultimo.id;
         setAviso(ultimo);
-        if (activoRef.current) sonar();
+        if (activoRef.current) {
+          sonar();
+          notificar(ultimo);
+        }
         // Que la pantalla abierta muestre el pedido sin tener que recargar
         router.refresh();
       } catch {
@@ -137,7 +178,8 @@ export default function NuevoPedido({ pendingCount }: { pendingCount: number }) 
     }
 
     void mirar();
-    const t = window.setInterval(mirar, CADA);
+    // No es un setInterval normal: ese se frena con la pestaña de fondo
+    const detener = intervaloDeFondo(() => void mirar(), CADA);
 
     // Al volver a la pestaña se mira de inmediato, sin esperar el turno
     const alVolver = () => {
@@ -147,10 +189,10 @@ export default function NuevoPedido({ pendingCount }: { pendingCount: number }) 
 
     return () => {
       vivo = false;
-      window.clearInterval(t);
+      detener();
       document.removeEventListener("visibilitychange", alVolver);
     };
-  }, [router, sonar]);
+  }, [router, sonar, notificar]);
 
   useEffect(() => {
     if (!aviso) return;
