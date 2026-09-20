@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/format";
+import { ZONA, fechaLima, inicioDelMesLima } from "@/lib/time";
 import {
   LOYALTY_GOAL,
   LOYALTY_MID_GOAL,
@@ -46,7 +47,10 @@ export default async function FidelidadPage({
       }
     : undefined;
 
-  const mesActual = new Date().getUTCMonth() + 1;
+  const mesActual = Number(
+    new Intl.DateTimeFormat("en-CA", { timeZone: ZONA, month: "numeric" }).format(new Date())
+  );
+  const inicioMes = inicioDelMesLima();
 
   const [customers, total, conPremio, sellosMes, cumpleMes] = await Promise.all([
     prisma.loyaltyCustomer.findMany({
@@ -62,7 +66,9 @@ export default async function FidelidadPage({
     prisma.loyaltyEvent.aggregate({
       where: {
         type: "SELLO",
-        createdAt: { gte: new Date(new Date().setDate(1)) },
+        // Era `setDate(1)`, que daba el día 1 a la hora actual: los sellos de
+        // esa madrugada quedaban fuera de la cuenta del mes
+        createdAt: { gte: inicioMes },
       },
       _sum: { quantity: true },
     }),
@@ -352,7 +358,7 @@ export default async function FidelidadPage({
                 name="birthday"
                 type="date"
                 required
-                max={new Date().toISOString().slice(0, 10)}
+                max={fechaLima(new Date())}
                 className={inputClass}
               />
             </Field>

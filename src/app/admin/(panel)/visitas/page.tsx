@@ -1,15 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { AdminHeader, EmptyState, Panel, StatCard } from "@/components/admin/ui";
+import { ZONA, fechaLima, haceDiasLima } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
-/** Medianoche de hace `dias` días, en hora local del servidor. */
-function desdeHace(dias: number): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - dias);
-  return d;
-}
+/** Medianoche de hace `dias` días, en hora de Lima. */
+const desdeHace = (dias: number) => haceDiasLima(dias);
 
 const DIAS_GRAFICO = 14;
 
@@ -49,7 +45,9 @@ export default async function VisitasPage() {
       where: { ...publico, createdAt: { gte: hace30 } },
     }),
     prisma.$queryRaw<{ dia: Date; visitas: bigint; personas: bigint }[]>`
-      SELECT date_trunc('day', "createdAt") AS dia,
+      -- La columna guarda UTC sin zona: se la declara UTC y se pasa a Lima,
+      -- si no el día cortaba a las 7 de la noche
+      SELECT date_trunc('day', ("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'America/Lima') AS dia,
              COUNT(*)::bigint              AS visitas,
              COUNT(DISTINCT "visitorId")::bigint AS personas
       FROM "Visit"
@@ -80,12 +78,13 @@ export default async function VisitasPage() {
   );
   const serie = Array.from({ length: DIAS_GRAFICO }, (_, i) => {
     const d = desdeHace(DIAS_GRAFICO - 1 - i);
-    const clave = d.toISOString().slice(0, 10);
+    const clave = fechaLima(d);
     return {
       clave,
       etiqueta: new Intl.DateTimeFormat("es-PE", {
         day: "2-digit",
         month: "2-digit",
+        timeZone: ZONA,
       }).format(d),
       ...(mapa.get(clave) ?? { visitas: 0, personas: 0 }),
     };

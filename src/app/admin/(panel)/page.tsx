@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
 import { formatDate, money, toNumber, STATUS_LABELS } from "@/lib/format";
+import { inicioDelDiaLima, inicioDelMesLima } from "@/lib/time";
 import { AdminHeader, EmptyState, LinkButton, Panel, StatCard } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +18,10 @@ const STATUS_TONE: Record<string, string> = {
 export default async function DashboardPage() {
   const settings = await getSettings();
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  // En hora de Lima, no la del servidor: en producción corre en UTC y "hoy"
+  // arrancaba a las 7 de la noche del día anterior
+  const startOfDay = inicioDelDiaLima();
+  const startOfMonth = inicioDelMesLima();
 
   const [ordersToday, pending, monthOrders, activeProducts, recent, topItems] =
     await Promise.all([
