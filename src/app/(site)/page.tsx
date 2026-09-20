@@ -33,7 +33,11 @@ export default async function HomePage() {
       <Aliados allies={allies} />
       <Promos promos={promos} currency={settings.currency} />
       <Destacados products={featured} extras={extras} currency={settings.currency} />
-      <Experiencia note={settings.eventsNote} />
+      <Experiencia
+        note={settings.eventsNote}
+        eventTypes={settings.eventTypes}
+        whatsapp={settings.whatsapp}
+      />
       <Contacto settings={settings} />
     </>
   );
