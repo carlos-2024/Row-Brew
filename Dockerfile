@@ -28,13 +28,18 @@ RUN npx prisma generate && npm run build
 # 3. Runner (producción)
 ##########################
 FROM node:22-alpine AS runner
-RUN apk add --no-cache libc6-compat openssl
+# tzdata: sin él, Alpine no conoce America/Lima y TZ se ignora en silencio
+RUN apk add --no-cache libc6-compat openssl tzdata
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+# El contenedor venía en UTC y las fechas salían con 5 horas de más. El código
+# que muestra horas ya pide America/Lima de forma explícita; esto alinea
+# además los logs y cualquier fecha que se escape.
+ENV TZ=America/Lima
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs

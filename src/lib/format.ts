@@ -1,4 +1,5 @@
 import type { Decimal } from "@prisma/client/runtime/library";
+import { ZONA } from "@/lib/time";
 
 /** Convierte un Decimal de Prisma (o cualquier cosa numérica) a number. */
 export function toNumber(value: Decimal | number | string | null | undefined): number {
@@ -44,6 +45,9 @@ export function formatDate(date: Date | string): string {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    // Sin esto toma la zona del servidor, que en producción es UTC: los
+    // pedidos aparecían con 5 horas de más
+    timeZone: ZONA,
   }).format(d);
 }
 
