@@ -11,6 +11,10 @@ function siempreAbierta(pathname: string): boolean {
     pathname === PREVIEW_PATH ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/api/auth") ||
+    // Lo que consume el panel. Sin esto el aviso de pedidos nuevos recibía un
+    // 503 justo durante el lanzamiento, que es cuando más se mira el panel.
+    // Cada ruta de aquí exige sesión por su cuenta.
+    pathname.startsWith("/api/admin") ||
     // El contador tiene que funcionar sobre todo en modo lanzamiento: es
     // cuando interesa saber cuánta gente llega
     pathname === "/api/visita" ||
