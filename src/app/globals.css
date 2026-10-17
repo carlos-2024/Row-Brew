@@ -129,6 +129,71 @@
   50%      { transform: translateX(2%) translateY(-2px) rotate(0.7deg); }
 }
 
+/* Murciélago: aletea y se desplaza apenas, para que no parezca un sticker */
+@keyframes aletear {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%      { transform: translateY(-14px) scaleY(0.78); }
+}
+
+/* Murciélago que cruza la pantalla de lado a lado, subiendo y bajando.
+   Va en vw para que el recorrido sea el ancho real y no se quede a medias
+   en una pantalla ancha. */
+@keyframes cruzar {
+  0%   { transform: translate(-12vw, 0) scaleY(1); opacity: 0; }
+  8%   { opacity: 0.75; }
+  25%  { transform: translate(18vw, -40px) scaleY(0.75); }
+  50%  { transform: translate(50vw, 20px) scaleY(1); }
+  75%  { transform: translate(82vw, -30px) scaleY(0.75); }
+  92%  { opacity: 0.75; }
+  100% { transform: translate(112vw, 10px) scaleY(1); opacity: 0; }
+}
+
+/* La araña baja por su hilo, se queda un rato y vuelve a subir */
+@keyframes colgar {
+  0%, 100% { transform: translateY(-105%); }
+  25%, 75% { transform: translateY(0); }
+}
+
+/* Niebla: una cinta ancha que se desplaza. Se mueve media cinta y vuelve,
+   y como el dibujo se repite el salto no se ve. */
+@keyframes niebla {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Fantasma: sube, se balancea y se desvanece antes de llegar arriba */
+@keyframes aparecer {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  15%  { opacity: 0.5; }
+  50%  { transform: translateY(-45vh) translateX(28px); opacity: 0.35; }
+  100% { transform: translateY(-88vh) translateX(-18px); opacity: 0; }
+}
+
+/* La calabaza respira: la luz de su vela no es constante */
+@keyframes titilar {
+  0%, 100% { opacity: 1; }
+  42%      { opacity: 0.82; }
+  47%      { opacity: 1; }
+  78%      { opacity: 0.88; }
+}
+
+/* ──────────────────────── Modo Halloween ────────────────────────
+   Se enciende desde Ajustes y marca el sitio con data-tema.
+
+   Solo se reemplazan los dos acentos: el verde de la marca se queda
+   donde está. La idea es que se note la temporada sin que Roa deje de
+   parecer Roa, y que la carta y el carrito sigan leyéndose igual.
+
+   Al redefinir las variables aquí —y no en cada componente— cualquier
+   `bg-mango` o `text-grape` del sitio cambia solo.                   */
+
+[data-tema="halloween"] {
+  --color-mango: #f07818;  /* calabaza */
+  --color-grape: #9d4edd;  /* morado de bruja */
+  --color-grape-deep: #6a2fae;
+  --color-taro: #c08ae8;
+}
+
 /* ─────────────────────────── Base ─────────────────────────── */
 
 @layer base {

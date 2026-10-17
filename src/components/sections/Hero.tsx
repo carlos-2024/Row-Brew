@@ -4,13 +4,21 @@ import CupArt from "@/components/CupArt";
 import BobaField from "@/components/BobaField";
 import Leaf, { Sparkle } from "@/components/Leaf";
 import Marquee from "@/components/Marquee";
-import type { SiteSettings } from "@/lib/settings";
+import { esHalloween, type SiteSettings } from "@/lib/settings";
 
 const TICKER = [
   "CAFÉ DE ESPECIALIDAD",
   "SIN AZÚCARES",
   "COLD BREW +18HRS",
   "HECHO A MANO",
+];
+
+/** La misma cinta, en temporada. Se mantiene lo que vende; cambia el tono. */
+const TICKER_HALLOWEEN = [
+  "CAFÉ DE ESPECIALIDAD",
+  "SUSTOS SIN AZÚCAR",
+  "COLD BREW +18HRS DE OSCURIDAD",
+  "HECHO A MANO (Y A GARRA)",
 ];
 
 const DATOS = [
@@ -21,6 +29,11 @@ const DATOS = [
 ];
 
 export default function Hero({ settings }: { settings: SiteSettings }) {
+  const halloween = esHalloween(settings);
+  // El saludo de temporada es un ajuste aparte: así se cambia sin perder el
+  // de siempre, que vuelve solo al apagar el modo
+  const kicker = (halloween && settings.halloweenKicker?.trim()) || settings.heroKicker;
+
   return (
     <section className="grain relative flex min-h-dvh flex-col justify-center overflow-hidden bg-roa-500 pb-16 pt-40 sm:pt-48">
       {/* Atmósfera */}
@@ -35,7 +48,7 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
         <div>
           <p className="flex items-center gap-3 font-hand text-[clamp(2.2rem,6vw,3.4rem)] leading-none text-cream/90">
             <Sparkle className="h-7 w-7 animate-spin-slow text-grape" />
-            {settings.heroKicker}
+            {kicker}
           </p>
 
           <h1 className="mt-3 font-display text-cream">
@@ -136,7 +149,7 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
 
       {/* Ticker inferior */}
       <div className="relative mt-14 -rotate-[1.2deg] border-y-2 border-ink bg-grape py-3 font-display text-xl text-ink">
-        <Marquee items={TICKER} />
+        <Marquee items={halloween ? TICKER_HALLOWEEN : TICKER} />
       </div>
     </section>
   );
