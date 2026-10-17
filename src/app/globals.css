@@ -129,6 +129,29 @@
   50%      { transform: translateX(2%) translateY(-2px) rotate(0.7deg); }
 }
 
+/* Murciélago: aletea y se desplaza apenas, para que no parezca un sticker */
+@keyframes aletear {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50%      { transform: translateY(-14px) scaleY(0.78); }
+}
+
+/* ──────────────────────── Modo Halloween ────────────────────────
+   Se enciende desde Ajustes y marca el sitio con data-tema.
+
+   Solo se reemplazan los dos acentos: el verde de la marca se queda
+   donde está. La idea es que se note la temporada sin que Roa deje de
+   parecer Roa, y que la carta y el carrito sigan leyéndose igual.
+
+   Al redefinir las variables aquí —y no en cada componente— cualquier
+   `bg-mango` o `text-grape` del sitio cambia solo.                   */
+
+[data-tema="halloween"] {
+  --color-mango: #f07818;  /* calabaza */
+  --color-grape: #9d4edd;  /* morado de bruja */
+  --color-grape-deep: #6a2fae;
+  --color-taro: #c08ae8;
+}
+
 /* ─────────────────────────── Base ─────────────────────────── */
 
 @layer base {

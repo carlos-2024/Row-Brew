@@ -1,5 +1,5 @@
 ﻿import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings";
+import { esHalloween, getSettings } from "@/lib/settings";
 import { toNumber } from "@/lib/format";
 import { saveSettings, saveExtra, deleteExtra } from "@/app/admin/actions";
 import {
@@ -77,6 +77,35 @@ export default async function AjustesPage() {
                 />
               </Field>
               <Button variant="primary">Guardar marca</Button>
+            </div>
+          </Panel>
+        </form>
+
+        {/* Temporada */}
+        <form action={saveSettings}>
+          <Panel title="Modo Halloween">
+            <div className="space-y-4">
+              <p className="text-sm leading-snug text-cream/45">
+                Tiñe los acentos de la página de naranja calabaza y morado, y
+                suelta murciélagos y telarañas. El verde de la marca se queda, y
+                la carta y el carrito no cambian. El panel nunca se disfraza.
+              </p>
+              <Toggle
+                name="halloweenMode"
+                label="Encender el modo Halloween"
+                defaultChecked={esHalloween(settings)}
+              />
+              <Field
+                label="Saludo del hero en Halloween"
+                hint="Reemplaza al saludo de siempre mientras el modo esté encendido. Vacío: se queda el normal."
+              >
+                <input
+                  name="halloweenKicker"
+                  defaultValue={settings.halloweenKicker}
+                  className={`${inputClass} font-hand text-xl`}
+                />
+              </Field>
+              <Button variant="primary">Guardar temporada</Button>
             </div>
           </Panel>
         </form>

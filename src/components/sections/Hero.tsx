@@ -4,7 +4,7 @@ import CupArt from "@/components/CupArt";
 import BobaField from "@/components/BobaField";
 import Leaf, { Sparkle } from "@/components/Leaf";
 import Marquee from "@/components/Marquee";
-import type { SiteSettings } from "@/lib/settings";
+import { esHalloween, type SiteSettings } from "@/lib/settings";
 
 const TICKER = [
   "CAFÉ DE ESPECIALIDAD",
@@ -21,6 +21,11 @@ const DATOS = [
 ];
 
 export default function Hero({ settings }: { settings: SiteSettings }) {
+  // El saludo de temporada es un ajuste aparte: así se cambia sin perder el
+  // de siempre, que vuelve solo al apagar el modo
+  const kicker =
+    (esHalloween(settings) && settings.halloweenKicker?.trim()) || settings.heroKicker;
+
   return (
     <section className="grain relative flex min-h-dvh flex-col justify-center overflow-hidden bg-roa-500 pb-16 pt-40 sm:pt-48">
       {/* Atmósfera */}
@@ -35,7 +40,7 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
         <div>
           <p className="flex items-center gap-3 font-hand text-[clamp(2.2rem,6vw,3.4rem)] leading-none text-cream/90">
             <Sparkle className="h-7 w-7 animate-spin-slow text-grape" />
-            {settings.heroKicker}
+            {kicker}
           </p>
 
           <h1 className="mt-3 font-display text-cream">

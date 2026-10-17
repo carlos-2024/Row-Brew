@@ -44,9 +44,24 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
     "Cumpleaños, Corporativo, Feria o activación, Matrimonio, Baby shower, Otro",
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
+
+  /** Modo Halloween: "true" lo enciende. Se controla desde Ajustes. */
+  halloweenMode: "false",
+  /** Reemplaza el saludo manuscrito del hero mientras el modo esté encendido */
+  halloweenKicker: "hola boo brew",
 };
 
 export type SiteSettings = typeof DEFAULT_SETTINGS;
+
+/**
+ * ¿Está encendido el modo Halloween?
+ *
+ * Los ajustes se guardan como texto, así que un interruptor llega como
+ * "true"/"false" y no como booleano.
+ */
+export function esHalloween(settings: SiteSettings): boolean {
+  return settings.halloweenMode?.trim().toLowerCase() === "true";
+}
 
 /**
  * Lee los ajustes de la base. Si la base no está lista todavía

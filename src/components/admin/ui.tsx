@@ -78,9 +78,14 @@ export function Toggle({
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-cream/12 bg-roa-950 px-4 py-2.5">
+      {/* Una casilla sin marcar no manda nada, así que apagarla no se guardaba
+          nunca. Este oculto manda el "false"; si la casilla está marcada su
+          valor llega después y gana. */}
+      <input type="hidden" name={name} value="false" />
       <input
         type="checkbox"
         name={name}
+        value="true"
         defaultChecked={defaultChecked}
         className="h-5 w-5 accent-[#6d9159]"
       />

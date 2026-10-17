@@ -43,7 +43,13 @@ const num = (fd: FormData, key: string, fallback = 0) => {
   const n = Number(fd.get(key));
   return Number.isFinite(n) ? n : fallback;
 };
-const bool = (fd: FormData, key: string) => fd.get(key) === "on" || fd.get(key) === "true";
+/**
+ * Cada interruptor manda dos valores con el mismo nombre: un oculto con
+ * "false" y, si está marcado, la casilla con "true". Por eso se miran todos y
+ * no solo el primero, que siempre sería el "false".
+ */
+const bool = (fd: FormData, key: string) =>
+  fd.getAll(key).some((v) => v === "on" || v === "true");
 
 /** Genera un slug libre; si ya existe le agrega un sufijo. */
 async function uniqueSlug(
@@ -742,16 +748,22 @@ export async function redeemFullReward(formData: FormData) {
 export async function saveSettings(formData: FormData) {
   await requireSession();
 
-  const entries = [...formData.entries()].filter(
-    ([key]) => key !== "$ACTION_ID" && !key.startsWith("$")
-  );
+  // Un Map y no una lista: los interruptores mandan dos valores con el mismo
+  // nombre —un oculto con "false" delante de la casilla con "true"— porque una
+  // casilla sin marcar no manda nada y el ajuste se quedaría encendido para
+  // siempre. Gana el último, que es la casilla.
+  const valores = new Map<string, string>();
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith("$")) continue;
+    valores.set(key, String(value));
+  }
 
   await Promise.all(
-    entries.map(([key, value]) =>
+    [...valores].map(([key, value]) =>
       prisma.setting.upsert({
         where: { key },
-        update: { value: String(value) },
-        create: { key, value: String(value) },
+        update: { value },
+        create: { key, value },
       })
     )
   );
