@@ -13,6 +13,14 @@ const TICKER = [
   "HECHO A MANO",
 ];
 
+/** La misma cinta, en temporada. Se mantiene lo que vende; cambia el tono. */
+const TICKER_HALLOWEEN = [
+  "CAFÉ DE ESPECIALIDAD",
+  "SUSTOS SIN AZÚCAR",
+  "COLD BREW +18HRS DE OSCURIDAD",
+  "HECHO A MANO (Y A GARRA)",
+];
+
 const DATOS = [
   ["Matcha", "japonés"],
   ["Café", "peruano"],
@@ -21,10 +29,10 @@ const DATOS = [
 ];
 
 export default function Hero({ settings }: { settings: SiteSettings }) {
+  const halloween = esHalloween(settings);
   // El saludo de temporada es un ajuste aparte: así se cambia sin perder el
   // de siempre, que vuelve solo al apagar el modo
-  const kicker =
-    (esHalloween(settings) && settings.halloweenKicker?.trim()) || settings.heroKicker;
+  const kicker = (halloween && settings.halloweenKicker?.trim()) || settings.heroKicker;
 
   return (
     <section className="grain relative flex min-h-dvh flex-col justify-center overflow-hidden bg-roa-500 pb-16 pt-40 sm:pt-48">
@@ -141,7 +149,7 @@ export default function Hero({ settings }: { settings: SiteSettings }) {
 
       {/* Ticker inferior */}
       <div className="relative mt-14 -rotate-[1.2deg] border-y-2 border-ink bg-grape py-3 font-display text-xl text-ink">
-        <Marquee items={TICKER} />
+        <Marquee items={halloween ? TICKER_HALLOWEEN : TICKER} />
       </div>
     </section>
   );
