@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart, unitPrice } from "./CartProvider";
 import AddressSearch, { type Direccion } from "./AddressSearch";
+import DiscountField, { type DescuentoAplicado } from "./DiscountField";
 import CupArt from "@/components/CupArt";
 import ProductArt from "@/components/ProductArt";
 import Calendar from "@/components/events/Calendar";
@@ -54,6 +55,9 @@ export default function CartDrawer({
   const [step, setStep] = useState<Step>("carrito");
   const [error, setError] = useState<string | null>(null);
   const [direccion, setDireccion] = useState<Direccion | null>(null);
+  const [descuento, setDescuento] = useState<DescuentoAplicado>(null);
+  /** El texto tal cual: el monto lo recalcula el servidor al registrar */
+  const [codigoTexto, setCodigoTexto] = useState("");
   const [blocked, setBlocked] = useState<string[]>([]);
 
   const [form, setForm] = useState({
@@ -83,7 +87,17 @@ export default function CartDrawer({
   }, [esEvento, blocked.length]);
 
   const envio = esDelivery ? (direccion?.fee ?? 0) : 0;
-  const totalFinal = pricing.total + envio;
+  const rebaja = descuento?.amount ?? 0;
+  // Math.max: el descuento nunca deja el total en negativo
+  const totalFinal = Math.max(0, pricing.total - rebaja) + envio;
+
+  /** Lo que el campo del código necesita saber del carrito */
+  const itemsParaCodigo = items.map((i) => ({
+    productId: i.productId,
+    quantity: i.quantity,
+    extrasTotal: i.extras.reduce((s, e) => s + e.price, 0),
+  }));
+  const hayDeAliados = items.some((i) => Boolean(i.allyId));
 
   const money = (n: number) => `${currency} ${n.toFixed(2)}`;
 
@@ -102,6 +116,8 @@ export default function CartDrawer({
       eventType: eventTypes[0] ?? "",
     });
     setDireccion(null);
+    setDescuento(null);
+    setCodigoTexto("");
   }
 
   async function submit(e: React.FormEvent) {
@@ -153,6 +169,8 @@ export default function CartDrawer({
           lng: direccion?.lng ?? undefined,
           // Solo los ids: el servidor lee de la base el precio del combo
           promoIds: chosenPromos.map((p) => p.id),
+          // Solo el texto: el servidor vuelve a calcular cuánto descuenta
+          discountCode: codigoTexto,
           items: items.map((i) => ({
             productId: i.productId,
             quantity: i.quantity,
@@ -515,6 +533,23 @@ export default function CartDrawer({
 
         {items.length > 0 && (
           <footer className="border-t-2 border-ink/12 bg-cream-2 px-5 py-4">
+            {/* Solo en el paso del carrito: una vez que está llenando sus
+                datos, meter un campo más entre él y el botón lo distrae */}
+            {step === "carrito" && (
+              <div className="mb-3">
+                <DiscountField
+                  items={itemsParaCodigo}
+                  currency={currency}
+                  hayDeAliados={hayDeAliados}
+                  value={descuento}
+                  onChange={(d, texto) => {
+                    setDescuento(d);
+                    setCodigoTexto(texto);
+                  }}
+                />
+              </div>
+            )}
+
             {pricing.hints.map((h) => (
               <p
                 key={h.id}
@@ -525,7 +560,7 @@ export default function CartDrawer({
               </p>
             ))}
 
-            {(pricing.applied.length > 0 || envio > 0) && (
+            {(pricing.applied.length > 0 || envio > 0 || rebaja > 0) && (
               <div className="mb-3 space-y-1">
                 <div className="flex items-baseline justify-between text-sm text-ink/55">
                   <span>Subtotal</span>
@@ -543,6 +578,12 @@ export default function CartDrawer({
                     <span>−{money(p.saved)}</span>
                   </div>
                 ))}
+                {rebaja > 0 && descuento && (
+                  <div className="flex items-baseline justify-between text-sm font-bold text-roa-600">
+                    <span>Código {descuento.code}</span>
+                    <span>−{money(rebaja)}</span>
+                  </div>
+                )}
                 {envio > 0 && (
                   <div className="flex items-baseline justify-between text-sm font-bold text-ink/70">
                     <span>Envío</span>

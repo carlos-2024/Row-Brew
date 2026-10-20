@@ -361,3 +361,12 @@ export function BellOffIcon({ className = "" }: IconProps) {
     </svg>
   );
 }
+
+export function TicketIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...S} aria-hidden>
+      <path d="M3 9.5V7a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v2.5a2.5 2.5 0 0 0 0 5V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2.5a2.5 2.5 0 0 0 0-5Z" />
+      <path d="M14 6v2M14 11v2M14 16v2" />
+    </svg>
+  );
+}

@@ -19,6 +19,7 @@ import {
   CalendarIcon,
   SlidersIcon,
   PartyIcon,
+  TicketIcon,
 } from "@/components/Icons";
 
 const LINKS = [
@@ -33,6 +34,7 @@ const LINKS = [
   { href: "/admin/categorias", label: "Categorías", Icon: FolderIcon },
   { href: "/admin/extras", label: "Opcionales", Icon: SlidersIcon },
   { href: "/admin/promos", label: "Promos", Icon: TagIcon },
+  { href: "/admin/descuentos", label: "Descuentos", Icon: TicketIcon },
   { href: "/admin/aliados", label: "Aliados", Icon: HandshakeIcon },
   { href: "/admin/fidelidad", label: "Fidelidad", Icon: PawIcon },
   { href: "/admin/ajustes", label: "Ajustes", Icon: GearIcon },
