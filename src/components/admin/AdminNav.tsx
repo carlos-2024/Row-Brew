@@ -18,6 +18,7 @@ import {
   HandshakeIcon,
   CalendarIcon,
   SlidersIcon,
+  PartyIcon,
 } from "@/components/Icons";
 
 const LINKS = [
@@ -25,6 +26,9 @@ const LINKS = [
   { href: "/admin/visitas", label: "Visitas", Icon: EyeIcon },
   { href: "/admin/pedidos", label: "Pedidos", Icon: ReceiptIcon },
   { href: "/admin/eventos", label: "Eventos", Icon: CalendarIcon },
+  // exact: sin esto se marcaría también al estar en /admin/eventos, que
+  // empieza igual pero es otra cosa (las cotizaciones)
+  { href: "/admin/evento", label: "Modo evento", Icon: PartyIcon, exact: true },
   { href: "/admin/productos", label: "Productos", Icon: BobaIcon },
   { href: "/admin/categorias", label: "Categorías", Icon: FolderIcon },
   { href: "/admin/extras", label: "Opcionales", Icon: SlidersIcon },

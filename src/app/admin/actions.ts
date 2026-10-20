@@ -770,3 +770,106 @@ export async function saveSettings(formData: FormData) {
 
   await refresh();
 }
+
+// ───────────────────────────── Modo evento ─────────────────────────────
+// La carta del evento vive aparte de la del local: en una feria se vende
+// una selección corta y a otro precio, y mezclarlas obligaría a reconfigurar
+// la carta de siempre cada vez que hay un Pop Up.
+
+export async function saveEventProduct(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const name = str(formData, "name");
+  if (!name) return;
+
+  const datos = {
+    name,
+    description: str(formData, "description") || null,
+    price: num(formData, "price"),
+    imageUrl: str(formData, "imageUrl") || null,
+    categorySlug: str(formData, "categorySlug") || "sparkling-tea",
+    kind: str(formData, "kind") || "bebida",
+    temperature: str(formData, "temperature") || "frio",
+    badge: str(formData, "badge") || null,
+    active: bool(formData, "active"),
+  };
+
+  if (id) {
+    await prisma.eventProduct.update({ where: { id }, data: datos });
+  } else {
+    // Al final de la lista: lo recién agregado no debería saltar al frente
+    const ultimo = await prisma.eventProduct.findFirst({
+      orderBy: { position: "desc" },
+    });
+    await prisma.eventProduct.create({
+      data: { ...datos, position: (ultimo?.position ?? -1) + 1 },
+    });
+  }
+
+  await refresh();
+}
+
+export async function deleteEventProduct(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (id) await prisma.eventProduct.delete({ where: { id } });
+  await refresh("Eliminado");
+}
+
+/** Sube o baja un producto de la carta del evento intercambiando posiciones. */
+export async function moveEventProduct(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  const haciaArriba = str(formData, "dir") === "up";
+  if (!id) return;
+
+  const actual = await prisma.eventProduct.findUnique({ where: { id } });
+  if (!actual) return;
+
+  // El vecino en esa dirección; si no hay, ya está en el extremo
+  const vecino = await prisma.eventProduct.findFirst({
+    where: { position: haciaArriba ? { lt: actual.position } : { gt: actual.position } },
+    orderBy: { position: haciaArriba ? "desc" : "asc" },
+  });
+  if (!vecino) return;
+
+  await prisma.$transaction([
+    prisma.eventProduct.update({
+      where: { id: actual.id },
+      data: { position: vecino.position },
+    }),
+    prisma.eventProduct.update({
+      where: { id: vecino.id },
+      data: { position: actual.position },
+    }),
+  ]);
+
+  await refresh("Orden actualizado");
+}
+
+export async function addEventPhoto(formData: FormData) {
+  await requireSession();
+
+  const url = str(formData, "url");
+  if (!url) return;
+
+  const ultima = await prisma.eventPhoto.findFirst({ orderBy: { position: "desc" } });
+  await prisma.eventPhoto.create({
+    data: {
+      url,
+      caption: str(formData, "caption") || null,
+      position: (ultima?.position ?? -1) + 1,
+    },
+  });
+
+  await refresh("Foto agregada");
+}
+
+export async function deleteEventPhoto(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (id) await prisma.eventPhoto.delete({ where: { id } });
+  await refresh("Eliminado");
+}

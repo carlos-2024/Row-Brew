@@ -45,6 +45,22 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   eventsNote:
     "Ofrecemos una experiencia completa de bebidas para eventos, ferias, Pop Up y corporativos.",
 
+  // ── Página de evento (/evento) ──
+  /** "true" la publica. Apagada responde 404: no conviene dejar a la vista
+   *  una feria que ya pasó, ni media página a medio armar. */
+  eventPageActive: "false",
+  eventTitle: "¡Hola brew brew!",
+  eventKicker: "modo evento",
+  /** Afiche del evento. Vacío: no se muestra el bloque. */
+  eventPosterUrl: "",
+  eventPosterAlt: "Afiche del evento",
+  /** Dónde y cuándo. Vacíos: no se muestran. */
+  eventPlace: "",
+  eventDate: "",
+  eventMenuTitle: "La carta de hoy",
+  eventGalleryTitle: "Así se vive",
+  eventNote: "",
+
   /** Modo Halloween: "true" lo enciende. Se controla desde Ajustes. */
   halloweenMode: "false",
   /** Reemplaza el saludo manuscrito del hero mientras el modo esté encendido */
@@ -61,6 +77,11 @@ export type SiteSettings = typeof DEFAULT_SETTINGS;
  */
 export function esHalloween(settings: SiteSettings): boolean {
   return settings.halloweenMode?.trim().toLowerCase() === "true";
+}
+
+/** ¿Está publicada la página de evento? Mismo criterio que el de Halloween. */
+export function eventoPublicado(settings: SiteSettings): boolean {
+  return settings.eventPageActive?.trim().toLowerCase() === "true";
 }
 
 /**

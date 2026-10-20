@@ -436,3 +436,46 @@ model Setting {
   key   String @id
   value String
 }
+
+// ───────────────────────────── Modo evento ─────────────────────────────
+// La página /evento es para las ferias y los Pop Up: una carta reducida,
+// con sus propios precios, que no toca la carta del local.
+
+model EventProduct {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+
+  /// Foto propia. Vacío: se dibuja la ilustración, igual que en la carta.
+  imageUrl String?
+  /// De qué familia es, para elegir los colores de la ilustración
+  categorySlug String @default("sparkling-tea")
+  /// bebida | comida | postre
+  kind        String  @default("bebida")
+  /// frio | caliente
+  temperature String  @default("frio")
+  /// Etiqueta de esquina: nuevo | estrella
+  badge       String?
+
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, position])
+}
+
+model EventPhoto {
+  id      String  @id @default(cuid())
+  url     String
+  caption String?
+
+  position Int     @default(0)
+  active   Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([active, position])
+}
