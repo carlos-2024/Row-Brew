@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { normalizarCodigo } from "@/lib/descuento";
 import { getSession } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import {
@@ -871,5 +872,61 @@ export async function deleteEventPhoto(formData: FormData) {
   await requireSession();
   const id = str(formData, "id");
   if (id) await prisma.eventPhoto.delete({ where: { id } });
+  await refresh("Eliminado");
+}
+
+// ──────────────────── Códigos de descuento (aliados) ────────────────────
+
+/** "2026-11-30" → Date, o null si viene vacío o ilegible. */
+function fechaOpcional(fd: FormData, key: string): Date | null {
+  const v = str(fd, key);
+  if (!v) return null;
+  // Se fija el mediodía UTC: con la medianoche, el servidor en UTC y Lima
+  // cinco horas atrás caerían en días distintos
+  const d = new Date(`${v}T12:00:00Z`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export async function saveDiscountCode(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  // Mayúsculas y sin espacios: así se guarda y así se compara al canjearlo
+  const code = normalizarCodigo(str(formData, "code"));
+  if (!code) return;
+
+  const datos = {
+    code,
+    kind: str(formData, "kind") === "monto" ? "monto" : "porcentaje",
+    value: num(formData, "value"),
+    allyId: str(formData, "allyId") || null,
+    maxDiscount: num(formData, "maxDiscount"),
+    minSubtotal: num(formData, "minSubtotal"),
+    maxUses: Math.max(0, Math.floor(num(formData, "maxUses"))),
+    startsAt: fechaOpcional(formData, "startsAt"),
+    endsAt: fechaOpcional(formData, "endsAt"),
+    active: bool(formData, "active"),
+  };
+
+  try {
+    if (id) {
+      await prisma.discountCode.update({ where: { id }, data: datos });
+    } else {
+      await prisma.discountCode.create({ data: datos });
+    }
+  } catch {
+    // El único choque posible es el código repetido, y vale la pena decirlo
+    // en vez de dejar al panel diciendo "guardado" sin haber guardado nada
+    await refresh(`Ya existe un código ${code}`);
+    return;
+  }
+
+  await refresh();
+}
+
+export async function deleteDiscountCode(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (id) await prisma.discountCode.delete({ where: { id } });
   await refresh("Eliminado");
 }

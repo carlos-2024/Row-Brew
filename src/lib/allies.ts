@@ -88,6 +88,8 @@ export async function getAllies(): Promise<AllyView[]> {
         categoryName: p.category.name,
         categoryKind: p.category.kind,
         temperature: p.temperature,
+        // Lo necesita el carrito para ofrecer el código de descuento
+        allyId: a.id,
       })),
     }));
   } catch {

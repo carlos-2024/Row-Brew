@@ -192,7 +192,8 @@ model Ally {
   position Int     @default(0)
   active   Boolean @default(true)
 
-  images   AllyImage[]
+  images        AllyImage[]
+  discountCodes DiscountCode[]
   products Product[]
   /// ── SEO ──
   /// Lo que ve el buscador, aparte de lo que ve el cliente. Se guarda por
@@ -271,6 +272,11 @@ model Order {
   eventRequest   EventRequest? @relation(fields: [eventRequestId], references: [id], onDelete: SetNull)
 
   subtotal     Decimal     @db.Decimal(10, 2)
+  /// Código de descuento usado, copiado tal cual. No es una relación a
+  /// propósito: si el código se borra o se edita, el pedido tiene que seguir
+  /// diciendo con cuál se cobró.
+  discountCode   String?
+  discountAmount Decimal  @default(0) @db.Decimal(10, 2)
   total        Decimal     @db.Decimal(10, 2)
   status       OrderStatus @default(PENDIENTE)
   items        OrderItem[]
@@ -478,4 +484,49 @@ model EventPhoto {
   createdAt DateTime @default(now())
 
   @@index([active, position])
+}
+
+// ──────────────────────── Códigos de descuento ────────────────────────
+// Solo descuentan productos de aliados. Las bebidas propias nunca entran:
+// el margen de la marca aliada lo negocia ella, y un código suelto que
+// rebajara toda la carta se comería el margen del local sin que nadie lo
+// haya decidido.
+
+model DiscountCode {
+  id String @id @default(cuid())
+
+  /// Se guarda siempre en MAYÚSCULAS y se compara así: nadie teclea un cupón
+  /// respetando mayúsculas, y dos códigos que solo difirieran en eso serían
+  /// indistinguibles para quien lo escribe.
+  code String @unique
+
+  /// porcentaje | monto
+  kind  String  @default("porcentaje")
+  value Decimal @db.Decimal(10, 2)
+
+  /// Limitado a un aliado. Vacío: vale para los productos de cualquiera.
+  allyId String?
+  ally   Ally?   @relation(fields: [allyId], references: [id], onDelete: Cascade)
+
+  /// Tope del descuento cuando es porcentaje. 0 = sin tope.
+  maxDiscount Decimal @db.Decimal(10, 2) @default(0)
+  /// Mínimo a gastar en productos de aliados para que valga. 0 = sin mínimo.
+  minSubtotal Decimal @db.Decimal(10, 2) @default(0)
+
+  /// Veces que puede usarse en total. 0 = ilimitado.
+  maxUses   Int @default(0)
+  /// Cuántas veces se usó ya. Lo lleva el servidor al registrar el pedido.
+  usedCount Int @default(0)
+
+  /// Ventana de validez. Vacías: sin límite por ese lado.
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([allyId])
 }

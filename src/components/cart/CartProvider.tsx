@@ -125,6 +125,7 @@ export function CartProvider({
             categoryKind: product.categoryKind,
             temperature: product.temperature,
             promoEligible: product.promoEligible,
+            allyId: product.allyId ?? null,
           },
         ];
       });

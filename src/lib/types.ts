@@ -17,6 +17,11 @@ export type MenuProduct = {
   temperature?: string;
   /** Clásico, Signature… */
   subcategoryName?: string | null;
+  /**
+   * Marca aliada de la que viene. null o ausente: es de la casa.
+   * El carrito lo usa para saber si puede ofrecer un código de descuento.
+   */
+  allyId?: string | null;
   /** Grupos de opcionales propios. Ausente: solo los extras sueltos. */
   extraGroups?: MenuExtraGroup[];
 };
@@ -62,7 +67,7 @@ export type AllyView = {
   logoUrl: string | null;
   coverUrl: string | null;
   images: AllyImageView[];
-  products: MenuProduct[];
+  products: MenuProduct[];
   /** ── SEO ── lo que ve el buscador, aparte de lo que ve el cliente */
   metaTitle: string | null;
   metaDescription: string | null;
@@ -118,4 +123,6 @@ export type CartItem = {
   categoryKind: string;
   temperature?: string;
   promoEligible: boolean;
+  /** Marca aliada, para el código de descuento. null: es de la casa. */
+  allyId?: string | null;
 };

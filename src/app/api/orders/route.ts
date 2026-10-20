@@ -5,6 +5,7 @@ import { getSettings } from "@/lib/settings";
 import { getAutoPromos, getPromoRulesByIds } from "@/lib/menu";
 import { priceCart, type PriceableItem } from "@/lib/pricing";
 import { classify, getZones } from "@/lib/coverage";
+import { resolverDescuento } from "@/lib/descuentoServidor";
 import { eventCode, toUtcDate, todayUtc } from "@/lib/events";
 import type { DocType } from "@prisma/client";
 
@@ -34,6 +35,8 @@ type Body = {
   items?: IncomingItem[];
   /** Promos que el cliente armó desde su tarjeta, solo los identificadores */
   promoIds?: string[];
+  /** Solo el texto del código: el monto lo calcula el servidor */
+  discountCode?: string;
 };
 
 const DELIVERY_TEXT: Record<string, string> = {
@@ -234,6 +237,20 @@ export async function POST(request: Request) {
 
     const pricing = priceCart(priceable, [...elegidas, ...promos]);
 
+    // ── Código de descuento: se recalcula acá, no se acepta el del navegador ──
+    // Se resuelve con la misma función que usó el carrito para mostrarlo, así
+    // el cliente no puede ver un descuento que después no se cobra.
+    const descuento = await resolverDescuento(
+      String(body.discountCode ?? ""),
+      priceable.map((i) => ({
+        productId: i.productId,
+        quantity: i.quantity,
+        extrasTotal: i.extrasTotal,
+      }))
+    );
+    const discountAmount = descuento.ok ? descuento.amount : 0;
+    const discountCode = descuento.ok ? descuento.code : null;
+
     // ── Zona de envío: se recalcula acá, no se acepta la del navegador ──
     let deliveryZone: string | null = null;
     let deliveryFee = 0;
@@ -255,7 +272,9 @@ export async function POST(request: Request) {
       }
     }
 
-    const total = pricing.total + deliveryFee;
+    // Math.max: el descuento nunca empuja el total por debajo de cero, ni
+    // siquiera si alguien configurara un código disparatado
+    const total = Math.max(0, pricing.total - discountAmount) + deliveryFee;
     const cur = settings.currency;
     const code = orderCode();
 
@@ -294,12 +313,31 @@ export async function POST(request: Request) {
         deliveryFee,
         eventRequestId,
         subtotal: pricing.subtotal,
+        discountCode,
+        discountAmount,
         total,
         items: {
           create: lines.map(({ extrasLabel: _e, ...line }) => line),
         },
       },
     });
+
+    // Se cuenta el uso recién ahora, con el pedido ya guardado: si se contara
+    // al validarlo, cada tecleo del cupón gastaría una unidad.
+    //
+    // El incremento va aparte y sin tumbar el pedido si falla: el cliente ya
+    // tiene su orden registrada, y perderla por no haber podido sumar uno a
+    // un contador sería mucho peor que un cupón usado una vez de más.
+    if (descuento.ok && descuento.id) {
+      await prisma.discountCode
+        .update({
+          where: { id: descuento.id },
+          data: { usedCount: { increment: 1 } },
+        })
+        .catch(() => {
+          console.error(`No se pudo contar el uso del código en ${code}`);
+        });
+    }
 
     const message = [
       `¡Hola Roa Brew! 🧋 Quiero hacer un pedido.`,
@@ -326,7 +364,9 @@ export async function POST(request: Request) {
         (l) =>
           `• ${l.quantity}x ${l.name}${l.extrasLabel ? ` (+ ${l.extrasLabel})` : ""} — ${cur} ${l.lineTotal.toFixed(2)}`
       ),
-      ...(pricing.applied.length > 0
+      // El subtotal también cuando solo hay código: sin él la línea del
+      // descuento colgaría de la nada y el total no cuadraría a la vista
+      ...(pricing.applied.length > 0 || discountAmount > 0
         ? [
             ``,
             `Subtotal: ${cur} ${pricing.subtotal.toFixed(2)}`,
@@ -336,6 +376,9 @@ export async function POST(request: Request) {
             ),
           ]
         : []),
+      discountAmount > 0
+        ? `Código ${discountCode}: -${cur} ${discountAmount.toFixed(2)}`
+        : null,
       deliveryFee > 0 ? `Envío: ${cur} ${deliveryFee.toFixed(2)}` : null,
       ``,
       `*Total: ${cur} ${total.toFixed(2)}*`,
