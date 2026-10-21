@@ -1,10 +1,18 @@
 import { prisma } from "@/lib/prisma";
-import { toNumber } from "@/lib/format";
-import { eventoPublicado, getSettings } from "@/lib/settings";
+import { formatDate, toNumber } from "@/lib/format";
+import {
+  eventoPublicado,
+  getSettings,
+  pedidosEventoActivos,
+  preciosEventoVisibles,
+} from "@/lib/settings";
 import {
   addEventPhoto,
+  deleteEventOrder,
   deleteEventPhoto,
   deleteEventProduct,
+  limpiarPedidosEvento,
+  marcarPedidoEvento,
   moveEventProduct,
   saveEventProduct,
   saveSettings,
@@ -12,6 +20,7 @@ import {
 import {
   AdminHeader,
   Button,
+  EmptyState,
   Field,
   Panel,
   Toggle,
@@ -30,11 +39,19 @@ const FAMILIAS = [
 ];
 
 export default async function EventoAdminPage() {
-  const [settings, productos, fotos] = await Promise.all([
+  const [settings, productos, fotos, pedidos] = await Promise.all([
     getSettings(),
     prisma.eventProduct.findMany({ orderBy: { position: "asc" } }),
     prisma.eventPhoto.findMany({ orderBy: { position: "asc" } }),
+    // Los pendientes primero y los más viejos arriba: en la barra se prepara
+    // por orden de llegada
+    prisma.eventOrder.findMany({
+      orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+      include: { items: true },
+    }),
   ]);
+
+  const pendientes = pedidos.filter((p) => p.status !== "ENTREGADO").length;
 
   const publicada = eventoPublicado(settings);
 
@@ -64,6 +81,11 @@ export default async function EventoAdminPage() {
                 name="eventPageActive"
                 label="Publicar la página /evento"
                 defaultChecked={publicada}
+              />
+              <Toggle
+                name="eventOrdersActive"
+                label="Permitir pedidos desde la carta"
+                defaultChecked={pedidosEventoActivos(settings)}
               />
               <Field label="Título">
                 <input
@@ -147,6 +169,12 @@ export default async function EventoAdminPage() {
                   />
                 </div>
               )}
+
+              <Toggle
+                name="eventShowPrices"
+                label="Mostrar los precios en la carta"
+                defaultChecked={preciosEventoVisibles(settings)}
+              />
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Título de la carta">
@@ -410,6 +438,112 @@ export default async function EventoAdminPage() {
               </div>
             ))}
           </div>
+        )}
+      </Panel>
+
+      {/* ── Pedidos del evento ── */}
+      <Panel title={`Pedidos del evento (${pedidos.length})`} className="mt-6">
+        <p className="-mt-2 mb-5 max-w-2xl text-sm leading-snug text-cream/45">
+          Son los pedidos que la gente hace desde la carta de este evento. No se
+          mezclan con los del local ni aparecen en Pedidos. Son temporales: al
+          terminar la feria los borras desde abajo.
+          {pendientes > 0 && (
+            <strong className="ml-1 text-mango">{pendientes} sin entregar.</strong>
+          )}
+        </p>
+
+        {pedidos.length === 0 ? (
+          <EmptyState
+            title="Sin pedidos todavía"
+            text="Aparecen acá apenas alguien pida desde la carta del evento."
+          />
+        ) : (
+          <>
+            <div className="space-y-3">
+              {pedidos.map((o) => {
+                const entregado = o.status === "ENTREGADO";
+                return (
+                  <div
+                    key={o.id}
+                    className={`rounded-2xl border-2 bg-roa-950 p-4 ${
+                      entregado ? "border-cream/8 opacity-55" : "border-mango/40"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="rounded-full border-2 border-ink bg-mango px-3 py-1 font-display text-xl text-ink">
+                        {o.code}
+                      </span>
+                      <span className="font-display text-lg text-cream">
+                        {o.customerName}
+                      </span>
+                      {o.phone && (
+                        <span className="text-sm text-cream/45">{o.phone}</span>
+                      )}
+                      <span className="ml-auto font-display text-xl text-cream">
+                        {settings.currency} {toNumber(o.total).toFixed(2)}
+                      </span>
+                      <span className="text-sm text-cream/35">
+                        {formatDate(o.createdAt)}
+                      </span>
+                    </div>
+
+                    <ul className="mt-3 space-y-1">
+                      {o.items.map((i) => (
+                        <li key={i.id} className="text-sm text-cream/70">
+                          {i.quantity}× {i.name}
+                        </li>
+                      ))}
+                    </ul>
+
+                    {o.note && (
+                      <p className="mt-2 rounded-xl border-2 border-cream/10 px-3 py-2 text-sm text-cream/60">
+                        {o.note}
+                      </p>
+                    )}
+
+                    <div className="mt-3 flex gap-2">
+                      <form action={marcarPedidoEvento}>
+                        <input type="hidden" name="id" value={o.id} />
+                        <Button variant={entregado ? "ghost" : "primary"}>
+                          {entregado ? "Volver a pendiente" : "Entregado"}
+                        </Button>
+                      </form>
+                      <form action={deleteEventOrder} className="ml-auto">
+                        <input type="hidden" name="id" value={o.id} />
+                        <Button variant="danger">Borrar</Button>
+                      </form>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* ── Cerrar el evento ── */}
+            <form
+              action={limpiarPedidosEvento}
+              className="mt-6 rounded-2xl border-2 border-berry/40 bg-roa-950 p-4"
+            >
+              <p className="font-display text-xl text-cream">Cerrar el evento</p>
+              <p className="mt-1.5 max-w-2xl text-sm leading-snug text-cream/45">
+                Borra los {pedidos.length} pedidos para empezar limpio en la
+                próxima feria. No se puede deshacer, y por eso no pasa solo al
+                apagar la página: escribe{" "}
+                <strong className="text-cream/80">{pedidos.length}</strong> para
+                confirmar.
+              </p>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <Field label="Cuántos pedidos vas a borrar" className="w-52">
+                  <input
+                    name="confirmacion"
+                    inputMode="numeric"
+                    placeholder={String(pedidos.length)}
+                    className={inputClass}
+                  />
+                </Field>
+                <Button variant="danger">Borrar todos los pedidos</Button>
+              </div>
+            </form>
+          </>
         )}
       </Panel>
     </>

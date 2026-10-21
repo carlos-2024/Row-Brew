@@ -58,6 +58,10 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   eventPlace: "",
   eventDate: "",
   eventMenuTitle: "La carta de hoy",
+  /** "false" esconde los precios de toda la carta del evento. */
+  eventShowPrices: "true",
+  /** "false" deja la carta como vitrina: se mira, pero no se puede pedir. */
+  eventOrdersActive: "true",
   eventGalleryTitle: "Así se vive",
   eventNote: "",
 
@@ -75,13 +79,43 @@ export type SiteSettings = typeof DEFAULT_SETTINGS;
  * Los ajustes se guardan como texto, así que un interruptor llega como
  * "true"/"false" y no como booleano.
  */
+/**
+ * Lee un interruptor del panel.
+ *
+ * Los ajustes se guardan como texto, así que una casilla llega como
+ * "true"/"false" y no como booleano. `siFalta` decide qué pasa cuando la fila
+ * no existe todavía: hay interruptores que deben nacer apagados —publicar una
+ * página— y otros encendidos, como mostrar los precios.
+ */
+function interruptor(valor: string | undefined, siFalta = false): boolean {
+  const v = valor?.trim().toLowerCase();
+  if (!v) return siFalta;
+  return v === "true";
+}
+
 export function esHalloween(settings: SiteSettings): boolean {
-  return settings.halloweenMode?.trim().toLowerCase() === "true";
+  return interruptor(settings.halloweenMode);
 }
 
 /** ¿Está publicada la página de evento? Mismo criterio que el de Halloween. */
 export function eventoPublicado(settings: SiteSettings): boolean {
-  return settings.eventPageActive?.trim().toLowerCase() === "true";
+  return interruptor(settings.eventPageActive);
+}
+
+/**
+ * ¿Se muestran los precios en la carta del evento?
+ *
+ * Encendido por defecto: una carta sin precios es la excepción —cuando están
+ * en una pizarra en la feria, o las bebidas son de cortesía— y lo normal es
+ * que el cliente quiera saber cuánto cuesta.
+ */
+export function preciosEventoVisibles(settings: SiteSettings): boolean {
+  return interruptor(settings.eventShowPrices, true);
+}
+
+/** ¿Se puede pedir desde la carta del evento, o es solo para mirar? */
+export function pedidosEventoActivos(settings: SiteSettings): boolean {
+  return interruptor(settings.eventOrdersActive, true);
 }
 
 /**

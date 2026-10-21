@@ -930,3 +930,58 @@ export async function deleteDiscountCode(formData: FormData) {
   if (id) await prisma.discountCode.delete({ where: { id } });
   await refresh("Eliminado");
 }
+
+// ──────────────────── Pedidos del evento ────────────────────
+
+export async function marcarPedidoEvento(formData: FormData) {
+  await requireSession();
+
+  const id = str(formData, "id");
+  if (!id) return;
+
+  const pedido = await prisma.eventOrder.findUnique({ where: { id } });
+  if (!pedido) return;
+
+  // Un solo botón que alterna: en la barra se toca con una mano mientras la
+  // otra sostiene el vaso, y dos botones ahí se aciertan mal
+  await prisma.eventOrder.update({
+    where: { id },
+    data: { status: pedido.status === "ENTREGADO" ? "PENDIENTE" : "ENTREGADO" },
+  });
+
+  await refresh(pedido.status === "ENTREGADO" ? "Marcado pendiente" : "Entregado");
+}
+
+export async function deleteEventOrder(formData: FormData) {
+  await requireSession();
+  const id = str(formData, "id");
+  if (id) await prisma.eventOrder.delete({ where: { id } });
+  await refresh("Eliminado");
+}
+
+/**
+ * Cierra el evento: borra todos sus pedidos.
+ *
+ * Es una acción aparte y no un efecto de apagar la página a propósito. Cada
+ * feria es para otra empresa y los pedidos de la anterior no deben
+ * arrastrarse, pero borrarlos solos al tocar un interruptor se llevaría la
+ * jornada entera por un clic sin querer.
+ *
+ * Pide escribir el número de pedidos que se van a borrar: es la confirmación
+ * más barata que obliga a mirar cuántos son antes de hacerlo.
+ */
+export async function limpiarPedidosEvento(formData: FormData) {
+  await requireSession();
+
+  const confirmacion = str(formData, "confirmacion");
+  const hay = await prisma.eventOrder.count();
+
+  if (Number(confirmacion) !== hay) {
+    await refresh(`Para borrar escribe ${hay}`);
+    return;
+  }
+
+  // Los items se van solos por la cascada de la relación
+  const r = await prisma.eventOrder.deleteMany({});
+  await refresh(`${r.count} pedidos borrados`);
+}

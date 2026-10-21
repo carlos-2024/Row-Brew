@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import EventoCard from "@/components/evento/EventoCard";
+import EventoPedido from "@/components/evento/EventoPedido";
 import EventoGaleria from "@/components/evento/EventoGaleria";
 import { PinIcon, CalendarIcon } from "@/components/Icons";
 import { getEvento } from "@/lib/evento";
-import { eventoPublicado, getSettings } from "@/lib/settings";
+import {
+  eventoPublicado,
+  getSettings,
+  pedidosEventoActivos,
+  preciosEventoVisibles,
+} from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +42,8 @@ export default async function EventoPage() {
 
   const { productos, fotos } = await getEvento();
   const afiche = settings.eventPosterUrl.trim();
+  const conPrecios = preciosEventoVisibles(settings);
+  const sePuedePedir = pedidosEventoActivos(settings);
 
   return (
     <div className="bg-roa-500">
@@ -113,11 +120,15 @@ export default async function EventoPage() {
               Todavía no cargamos la carta de este evento.
             </p>
           ) : (
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {productos.map((p) => (
-                <EventoCard key={p.id} producto={p} currency={settings.currency} />
-              ))}
-            </div>
+            // Las tarjetas y el pedido van juntos en un componente de cliente:
+            // las cantidades viven en la tarjeta y en la barra de abajo a la
+            // vez, y separarlos obligaría a levantar ese estado igual
+            <EventoPedido
+              productos={productos}
+              currency={settings.currency}
+              mostrarPrecio={conPrecios}
+              permitePedir={sePuedePedir}
+            />
           )}
         </div>
 
