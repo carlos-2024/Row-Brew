@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import EventoBienvenida from "@/components/evento/EventoBienvenida";
 import EventoPedido from "@/components/evento/EventoPedido";
 import EventoGaleria from "@/components/evento/EventoGaleria";
 import { PinIcon, CalendarIcon } from "@/components/Icons";
@@ -9,6 +10,7 @@ import {
   getSettings,
   pedidosEventoActivos,
   preciosEventoVisibles,
+  segundosBienvenidaEvento,
 } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,7 @@ export default async function EventoPage() {
   const afiche = settings.eventPosterUrl.trim();
   const conPrecios = preciosEventoVisibles(settings);
   const sePuedePedir = pedidosEventoActivos(settings);
+  const bienvenida = segundosBienvenidaEvento(settings);
 
   return (
     // Vive fuera del layout del sitio a propósito: sin cabecera, sin pie, sin
@@ -53,28 +56,27 @@ export default async function EventoPage() {
     //
     // min-h-dvh porque ya no hay un <main> arriba que estire el fondo.
     <main className="min-h-dvh bg-roa-500">
-      {/* ── Portada ── */}
-      {/* pt-16: sin cabecera que esquivar, el título arranca mucho más arriba */}
-      <section className="grain relative overflow-hidden px-5 pb-16 pt-16 text-center sm:pt-20">
+      {/* La barra y el título solo se ven al entrar: a los pocos segundos se
+          apartan y dejan la carta, que es a lo que se viene. */}
+      {bienvenida > 0 && (
+        <EventoBienvenida
+          titulo={settings.eventTitle}
+          kicker={settings.eventKicker}
+          segundos={bienvenida}
+        />
+      )}
+
+      {/* ── Encabezado: dónde, cuándo y la nota ── */}
+      {/* Compacto a propósito: lo vistoso ya pasó en la bienvenida, y esto es
+          información que conviene tener a mano mientras se mira la carta. */}
+      <section className="grain relative overflow-hidden px-5 pb-10 pt-10 text-center">
         <div className="glow pointer-events-none absolute -left-40 top-0 h-[30rem] w-[30rem] opacity-50" />
 
         <div className="relative mx-auto max-w-3xl">
-          <h1 className="font-display text-[clamp(2.4rem,7vw,4.5rem)] leading-[0.95] text-cream">
+          <h1 className="font-display text-[clamp(1.9rem,5vw,3rem)] leading-none text-cream">
             {settings.eventTitle}
           </h1>
-
-          {/* La barra: es lo que la gente reconoce del Pop Up */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/img/barra-evento.webp"
-            alt="La barra de Roa Brew montada en el evento"
-            className="mx-auto mt-8 w-full max-w-xl animate-float-slow"
-            // La primera imagen de la página: sin lazy, para que no llegue
-            // tarde justo en la pantalla que el cliente ve primero
-            fetchPriority="high"
-          />
-
-          <p className="mt-6 font-hand text-[clamp(1.8rem,5vw,2.8rem)] leading-none text-grape">
+          <p className="mt-2 font-hand text-[clamp(1.4rem,4vw,2rem)] leading-none text-grape">
             {settings.eventKicker}
           </p>
 

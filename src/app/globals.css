@@ -177,6 +177,14 @@
   78%      { opacity: 0.88; }
 }
 
+/* La bienvenida del evento se va sola. La salida es de CSS y no de
+   JavaScript a propósito: así se cumple el tiempo aunque la página tarde en
+   hidratarse, y si el JS nunca llega la portada igual se quita en vez de
+   quedarse tapando la carta para siempre. */
+@keyframes salida-bienvenida {
+  to { opacity: 0; visibility: hidden; }
+}
+
 /* ──────────────────────── Modo Halloween ────────────────────────
    Se enciende desde Ajustes y marca el sitio con data-tema.
 
