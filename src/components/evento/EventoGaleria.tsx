@@ -36,7 +36,9 @@ export default function EventoGaleria({
             key={f.id}
             className="w-[80vw] max-w-sm shrink-0 snap-start sm:w-[22rem]"
           >
-            <div className="overflow-hidden rounded-3xl border-2 border-ink bg-roa-900 shadow-[5px_5px_0_var(--color-ink)]">
+            {/* bg-roa-700: solo tapa el hueco mientras la foto carga, y tiene
+                que distinguirse del verde del fondo para que el marco se vea */}
+            <div className="overflow-hidden rounded-3xl border-2 border-ink bg-roa-700 shadow-[5px_5px_0_var(--color-ink)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={f.url}

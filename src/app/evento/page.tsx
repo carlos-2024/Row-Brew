@@ -55,6 +55,10 @@ export default async function EventoPage() {
     //
     // min-h-dvh porque ya no hay un <main> arriba que estire el fondo.
     <main className="min-h-dvh bg-roa-500">
+      {/* El verde cubre la ventana entera, no solo el alto del contenido: al
+          estirar la página de más —el rebote del celular— asomaba el fondo
+          oscuro del sitio por arriba y por abajo. */}
+      <div className="fixed inset-0 -z-10 bg-roa-500" aria-hidden />
       {/* La barra y el título solo se ven al entrar: a los pocos segundos se
           apartan y dejan la carta, que es a lo que se viene. */}
       {/* El título, la barra, la bajada y el dónde y cuándo se ven solo al
@@ -70,9 +74,11 @@ export default async function EventoPage() {
         />
       )}
 
-      {/* ── Afiche ── */}
+      {/* ── Afiche: lo primero de la página, encima de la carta ── */}
+      {/* pt-10: sin él queda pegado al borde de arriba. Antes no se notaba
+          porque encima iba el encabezado, que ya no está. */}
       {afiche && (
-        <section className="mx-auto w-full max-w-3xl px-5 pb-14">
+        <section className="mx-auto w-full max-w-3xl px-5 pb-12 pt-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={afiche}
@@ -83,7 +89,10 @@ export default async function EventoPage() {
       )}
 
       {/* ── La carta ── */}
-      <section className="bg-roa-900 py-14">
+      {/* Sin fondo propio: la página entera va en el verde de la marca, de
+          la bienvenida al pie. Antes esta sección era verde oscuro y el corte
+          partía la página en dos. */}
+      <section className="py-14">
         <div className="mx-auto w-full max-w-7xl px-5">
           <h1 className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none text-cream">
             {settings.eventMenuTitle}
