@@ -530,3 +530,45 @@ model DiscountCode {
   @@index([active])
   @@index([allyId])
 }
+
+// ─────────────────────── Pedidos del evento ───────────────────────
+// Viven aparte de los pedidos del local y son temporales: cada feria es
+// para otra empresa y otra fecha, y arrastrar los de la anterior ensucia
+// la pantalla de la barra. Se borran cuando se cierra el evento, a mano
+// y desde el panel: un borrado automático al apagar un interruptor se
+// lleva por delante la jornada entera si alguien lo toca sin querer.
+
+model EventOrder {
+  id   String @id @default(cuid())
+  /// Número corto que el cliente canta en la barra
+  code String @unique
+
+  customerName String
+  phone        String?
+  note         String?
+
+  total  Decimal @db.Decimal(10, 2)
+  /// PENDIENTE | ENTREGADO
+  status String  @default("PENDIENTE")
+
+  items EventOrderItem[]
+
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+model EventOrderItem {
+  id      String     @id @default(cuid())
+  orderId String
+  order   EventOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  /// Copiados al momento del pedido: si después se edita la carta del
+  /// evento, el ticket tiene que seguir diciendo qué se pidió y a cuánto
+  name      String
+  unitPrice Decimal @db.Decimal(10, 2)
+  quantity  Int
+  lineTotal Decimal @db.Decimal(10, 2)
+
+  @@index([orderId])
+}
