@@ -46,9 +46,16 @@ export default async function EventoPage() {
   const sePuedePedir = pedidosEventoActivos(settings);
 
   return (
-    <div className="bg-roa-500">
+    // Vive fuera del layout del sitio a propósito: sin cabecera, sin pie, sin
+    // carrito flotante y sin los adornos de temporada. En una feria la
+    // pantalla es un celular prestado a medio metro de la barra, y cada cosa
+    // que no sea la carta es una distracción —o un camino a otra página.
+    //
+    // min-h-dvh porque ya no hay un <main> arriba que estire el fondo.
+    <main className="min-h-dvh bg-roa-500">
       {/* ── Portada ── */}
-      <section className="grain relative overflow-hidden px-5 pb-16 pt-32 text-center sm:pt-40">
+      {/* pt-16: sin cabecera que esquivar, el título arranca mucho más arriba */}
+      <section className="grain relative overflow-hidden px-5 pb-16 pt-16 text-center sm:pt-20">
         <div className="glow pointer-events-none absolute -left-40 top-0 h-[30rem] w-[30rem] opacity-50" />
 
         <div className="relative mx-auto max-w-3xl">
@@ -134,6 +141,6 @@ export default async function EventoPage() {
 
         <EventoGaleria fotos={fotos} titulo={settings.eventGalleryTitle} />
       </section>
-    </div>
+    </main>
   );
 }
