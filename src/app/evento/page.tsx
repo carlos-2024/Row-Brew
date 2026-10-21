@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import EventoBienvenida from "@/components/evento/EventoBienvenida";
 import EventoPedido from "@/components/evento/EventoPedido";
 import EventoGaleria from "@/components/evento/EventoGaleria";
-import { PinIcon, CalendarIcon } from "@/components/Icons";
 import { getEvento } from "@/lib/evento";
 import {
   eventoPublicado,
   getSettings,
   pedidosEventoActivos,
   preciosEventoVisibles,
+  segundosBienvenidaEvento,
 } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
@@ -44,61 +45,40 @@ export default async function EventoPage() {
   const afiche = settings.eventPosterUrl.trim();
   const conPrecios = preciosEventoVisibles(settings);
   const sePuedePedir = pedidosEventoActivos(settings);
+  const bienvenida = segundosBienvenidaEvento(settings);
 
   return (
-    <div className="bg-roa-500">
-      {/* ── Portada ── */}
-      <section className="grain relative overflow-hidden px-5 pb-16 pt-32 text-center sm:pt-40">
-        <div className="glow pointer-events-none absolute -left-40 top-0 h-[30rem] w-[30rem] opacity-50" />
+    // Vive fuera del layout del sitio a propósito: sin cabecera, sin pie, sin
+    // carrito flotante y sin los adornos de temporada. En una feria la
+    // pantalla es un celular prestado a medio metro de la barra, y cada cosa
+    // que no sea la carta es una distracción —o un camino a otra página.
+    //
+    // min-h-dvh porque ya no hay un <main> arriba que estire el fondo.
+    <main className="min-h-dvh bg-roa-500">
+      {/* El verde cubre la ventana entera, no solo el alto del contenido: al
+          estirar la página de más —el rebote del celular— asomaba el fondo
+          oscuro del sitio por arriba y por abajo. */}
+      <div className="fixed inset-0 -z-10 bg-roa-500" aria-hidden />
+      {/* La barra y el título solo se ven al entrar: a los pocos segundos se
+          apartan y dejan la carta, que es a lo que se viene. */}
+      {/* El título, la barra, la bajada y el dónde y cuándo se ven solo al
+          entrar. Después la página es la carta y las fotos, nada más. */}
+      {bienvenida > 0 && (
+        <EventoBienvenida
+          titulo={settings.eventTitle}
+          kicker={settings.eventKicker}
+          lugar={settings.eventPlace}
+          fecha={settings.eventDate}
+          nota={settings.eventNote}
+          segundos={bienvenida}
+        />
+      )}
 
-        <div className="relative mx-auto max-w-3xl">
-          <h1 className="font-display text-[clamp(2.4rem,7vw,4.5rem)] leading-[0.95] text-cream">
-            {settings.eventTitle}
-          </h1>
-
-          {/* La barra: es lo que la gente reconoce del Pop Up */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/img/barra-evento.webp"
-            alt="La barra de Roa Brew montada en el evento"
-            className="mx-auto mt-8 w-full max-w-xl animate-float-slow"
-            // La primera imagen de la página: sin lazy, para que no llegue
-            // tarde justo en la pantalla que el cliente ve primero
-            fetchPriority="high"
-          />
-
-          <p className="mt-6 font-hand text-[clamp(1.8rem,5vw,2.8rem)] leading-none text-grape">
-            {settings.eventKicker}
-          </p>
-
-          {(settings.eventPlace || settings.eventDate) && (
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              {settings.eventPlace && (
-                <span className="flex items-center gap-2 rounded-full border-2 border-ink bg-cream px-5 py-2.5 font-bold text-ink">
-                  <PinIcon className="h-4 w-4" />
-                  {settings.eventPlace}
-                </span>
-              )}
-              {settings.eventDate && (
-                <span className="flex items-center gap-2 rounded-full border-2 border-ink bg-mango px-5 py-2.5 font-bold text-ink">
-                  <CalendarIcon className="h-4 w-4" />
-                  {settings.eventDate}
-                </span>
-              )}
-            </div>
-          )}
-
-          {settings.eventNote && (
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-cream/85">
-              {settings.eventNote}
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* ── Afiche ── */}
+      {/* ── Afiche: lo primero de la página, encima de la carta ── */}
+      {/* pt-10: sin él queda pegado al borde de arriba. Antes no se notaba
+          porque encima iba el encabezado, que ya no está. */}
       {afiche && (
-        <section className="mx-auto w-full max-w-3xl px-5 pb-14">
+        <section className="mx-auto w-full max-w-3xl px-5 pb-12 pt-10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={afiche}
@@ -109,11 +89,14 @@ export default async function EventoPage() {
       )}
 
       {/* ── La carta ── */}
-      <section className="bg-roa-900 py-14">
+      {/* Sin fondo propio: la página entera va en el verde de la marca, de
+          la bienvenida al pie. Antes esta sección era verde oscuro y el corte
+          partía la página en dos. */}
+      <section className="py-14">
         <div className="mx-auto w-full max-w-7xl px-5">
-          <h2 className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none text-cream">
+          <h1 className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none text-cream">
             {settings.eventMenuTitle}
-          </h2>
+          </h1>
 
           {productos.length === 0 ? (
             <p className="mt-5 text-cream/50">
@@ -134,6 +117,6 @@ export default async function EventoPage() {
 
         <EventoGaleria fotos={fotos} titulo={settings.eventGalleryTitle} />
       </section>
-    </div>
+    </main>
   );
 }

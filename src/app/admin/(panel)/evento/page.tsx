@@ -5,6 +5,7 @@ import {
   getSettings,
   pedidosEventoActivos,
   preciosEventoVisibles,
+  segundosBienvenidaEvento,
 } from "@/lib/settings";
 import {
   addEventPhoto,
@@ -87,6 +88,20 @@ export default async function EventoAdminPage() {
                 label="Permitir pedidos desde la carta"
                 defaultChecked={pedidosEventoActivos(settings)}
               />
+              <Field
+                label="Segundos de la pantalla de bienvenida"
+                hint="La barra y el título al entrar, antes de mostrar la carta. 0 la quita. Máximo 10."
+              >
+                <input
+                  name="eventSplashSeconds"
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.5"
+                  defaultValue={segundosBienvenidaEvento(settings)}
+                  className={inputClass}
+                />
+              </Field>
               <Field label="Título">
                 <input
                   name="eventTitle"

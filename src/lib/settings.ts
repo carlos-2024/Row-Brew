@@ -62,6 +62,8 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   eventShowPrices: "true",
   /** "false" deja la carta como vitrina: se mira, pero no se puede pedir. */
   eventOrdersActive: "true",
+  /** Segundos que se queda la pantalla de bienvenida. 0 la desactiva. */
+  eventSplashSeconds: "3",
   eventGalleryTitle: "Así se vive",
   eventNote: "",
 
@@ -111,6 +113,18 @@ export function eventoPublicado(settings: SiteSettings): boolean {
  */
 export function preciosEventoVisibles(settings: SiteSettings): boolean {
   return interruptor(settings.eventShowPrices, true);
+}
+
+/**
+ * Segundos de la pantalla de bienvenida del evento.
+ *
+ * Se recorta entre 0 y 10: un valor absurdo escrito por error dejaría la
+ * carta tapada medio minuto, y lo que se quiere es un saludo, no una espera.
+ */
+export function segundosBienvenidaEvento(settings: SiteSettings): number {
+  const n = Number(settings.eventSplashSeconds);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(10, n);
 }
 
 /** ¿Se puede pedir desde la carta del evento, o es solo para mirar? */
