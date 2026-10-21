@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PinIcon, CalendarIcon } from "@/components/Icons";
 
 /**
  * Pantalla de bienvenida del evento: el título, la barra y la bajada, unos
@@ -18,10 +19,19 @@ import { useEffect, useState } from "react";
 export default function EventoBienvenida({
   titulo,
   kicker,
+  lugar,
+  fecha,
+  nota,
   segundos,
 }: {
   titulo: string;
   kicker: string;
+  /** Dónde y cuándo. Van aquí y no sobre la carta: quien mira esto ya está
+   *  en la feria, así que es un saludo, no información que haga falta
+   *  consultar mientras elige la bebida. */
+  lugar: string;
+  fecha: string;
+  nota: string;
   /** Cuánto se queda antes de empezar a irse. 0 la desactiva. */
   segundos: number;
 }) {
@@ -78,6 +88,29 @@ export default function EventoBienvenida({
         <p className="mt-5 font-hand text-[clamp(1.8rem,5vw,2.8rem)] leading-none text-grape">
           {kicker}
         </p>
+
+        {(lugar || fecha) && (
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+            {lugar && (
+              <span className="flex items-center gap-2 rounded-full border-2 border-ink bg-cream px-4 py-2 text-sm font-bold text-ink">
+                <PinIcon className="h-4 w-4" />
+                {lugar}
+              </span>
+            )}
+            {fecha && (
+              <span className="flex items-center gap-2 rounded-full border-2 border-ink bg-mango px-4 py-2 text-sm font-bold text-ink">
+                <CalendarIcon className="h-4 w-4" />
+                {fecha}
+              </span>
+            )}
+          </div>
+        )}
+
+        {nota && (
+          <p className="mx-auto mt-5 max-w-lg leading-relaxed text-cream/85">
+            {nota}
+          </p>
+        )}
       </div>
 
       <p className="absolute bottom-7 left-0 right-0 text-xs text-cream/40">

@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import EventoBienvenida from "@/components/evento/EventoBienvenida";
 import EventoPedido from "@/components/evento/EventoPedido";
 import EventoGaleria from "@/components/evento/EventoGaleria";
-import { PinIcon, CalendarIcon } from "@/components/Icons";
 import { getEvento } from "@/lib/evento";
 import {
   eventoPublicado,
@@ -58,52 +57,18 @@ export default async function EventoPage() {
     <main className="min-h-dvh bg-roa-500">
       {/* La barra y el título solo se ven al entrar: a los pocos segundos se
           apartan y dejan la carta, que es a lo que se viene. */}
+      {/* El título, la barra, la bajada y el dónde y cuándo se ven solo al
+          entrar. Después la página es la carta y las fotos, nada más. */}
       {bienvenida > 0 && (
         <EventoBienvenida
           titulo={settings.eventTitle}
           kicker={settings.eventKicker}
+          lugar={settings.eventPlace}
+          fecha={settings.eventDate}
+          nota={settings.eventNote}
           segundos={bienvenida}
         />
       )}
-
-      {/* ── Encabezado: dónde, cuándo y la nota ── */}
-      {/* Compacto a propósito: lo vistoso ya pasó en la bienvenida, y esto es
-          información que conviene tener a mano mientras se mira la carta. */}
-      <section className="grain relative overflow-hidden px-5 pb-10 pt-10 text-center">
-        <div className="glow pointer-events-none absolute -left-40 top-0 h-[30rem] w-[30rem] opacity-50" />
-
-        <div className="relative mx-auto max-w-3xl">
-          <h1 className="font-display text-[clamp(1.9rem,5vw,3rem)] leading-none text-cream">
-            {settings.eventTitle}
-          </h1>
-          <p className="mt-2 font-hand text-[clamp(1.4rem,4vw,2rem)] leading-none text-grape">
-            {settings.eventKicker}
-          </p>
-
-          {(settings.eventPlace || settings.eventDate) && (
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              {settings.eventPlace && (
-                <span className="flex items-center gap-2 rounded-full border-2 border-ink bg-cream px-5 py-2.5 font-bold text-ink">
-                  <PinIcon className="h-4 w-4" />
-                  {settings.eventPlace}
-                </span>
-              )}
-              {settings.eventDate && (
-                <span className="flex items-center gap-2 rounded-full border-2 border-ink bg-mango px-5 py-2.5 font-bold text-ink">
-                  <CalendarIcon className="h-4 w-4" />
-                  {settings.eventDate}
-                </span>
-              )}
-            </div>
-          )}
-
-          {settings.eventNote && (
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-cream/85">
-              {settings.eventNote}
-            </p>
-          )}
-        </div>
-      </section>
 
       {/* ── Afiche ── */}
       {afiche && (
@@ -120,9 +85,9 @@ export default async function EventoPage() {
       {/* ── La carta ── */}
       <section className="bg-roa-900 py-14">
         <div className="mx-auto w-full max-w-7xl px-5">
-          <h2 className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none text-cream">
+          <h1 className="font-display text-[clamp(1.8rem,5vw,3rem)] leading-none text-cream">
             {settings.eventMenuTitle}
-          </h2>
+          </h1>
 
           {productos.length === 0 ? (
             <p className="mt-5 text-cream/50">
