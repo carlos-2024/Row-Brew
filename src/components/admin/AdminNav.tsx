@@ -66,19 +66,34 @@ export default function AdminNav({
         </button>
       </div>
 
+      {/*
+        En pantallas anchas es una columna del alto de la ventana: el logo
+        arriba y la salida abajo se quedan quietos, y solo la lista de
+        secciones se desplaza. Antes tenía ese alto pero sin desbordamiento,
+        así que en una laptop los últimos enlaces —"Ver el sitio" y "Cerrar
+        sesión"— caían fuera y no había forma de llegar a ellos.
+
+        En el teléfono se queda como estaba, creciendo hacia abajo: el menú
+        empieza debajo de la barra superior, y recortarlo al alto de la
+        pantalla le comía justo esos 66 píxeles por el otro extremo.
+      */}
       <aside
         className={`${
           open ? "block" : "hidden"
-        } sticky top-0 z-20 h-fit shrink-0 border-b-2 border-cream/10 bg-roa-900 p-4 lg:block lg:h-dvh lg:w-64 lg:border-b-0 lg:border-r-2 lg:p-6`}
+        } sticky top-0 z-20 h-fit shrink-0 border-b-2 border-cream/10 bg-roa-900 p-4 lg:flex lg:h-dvh lg:flex-col lg:overflow-hidden lg:w-64 lg:border-b-0 lg:border-r-2 lg:p-6`}
       >
-        <div className="hidden lg:block">
+        <div className="hidden lg:block lg:shrink-0">
           <Link href="/" className="inline-block transition hover:-rotate-3">
             <Logo className="text-[24px]" tone="cream" />
           </Link>
           <p className="mt-3 font-hand text-xl text-roa-300">hola, {userName}</p>
         </div>
 
-        <nav className="mt-4 space-y-1 lg:mt-8">
+        {/* lg:min-h-0: sin él, un hijo de flex no se encoge por debajo de su
+            contenido y el desbordamiento nunca llega a activarse.
+            -mx-1 px-1: el hueco para que la barra de desplazamiento no se
+            monte sobre el borde de los botones. */}
+        <nav className="mt-4 space-y-1 lg:-mx-1 lg:mt-8 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-1">
           {LINKS.map((link) => {
             const active = isActive(link.href, link.exact);
             return (
@@ -104,7 +119,7 @@ export default function AdminNav({
           })}
         </nav>
 
-        <div className="mt-6 space-y-2 border-t-2 border-cream/10 pt-5">
+        <div className="mt-6 space-y-2 border-t-2 border-cream/10 pt-5 lg:shrink-0">
           <Link
             href="/"
             target="_blank"
